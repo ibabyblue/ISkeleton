@@ -57,4 +57,58 @@ final class SkeletonLineLayoutTests: XCTestCase {
         XCTAssertEqual(Double(a), 0.8, accuracy: 1e-3)
     }
 }
+
+final class UIViewSkeletonTests: XCTestCase {
+
+    @MainActor
+    private func overlayCount(_ v: UIView) -> Int {
+        v.subviews.filter { $0 is SkeletonOverlayView }.count
+    }
+
+    @MainActor
+    func test_skeletonTrue_addsOneOverlay() {
+        let label = UILabel()
+        label.text = "￥00.00"
+        label.frame = CGRect(x: 0, y: 0, width: 120, height: 20)
+        label.skeleton(true)
+        XCTAssertEqual(overlayCount(label), 1)
+    }
+
+    @MainActor
+    func test_skeletonTrueTwice_isIdempotent() {
+        let label = UILabel()
+        label.text = "￥00.00"
+        label.frame = CGRect(x: 0, y: 0, width: 120, height: 20)
+        label.skeleton(true)
+        label.skeleton(true)
+        XCTAssertEqual(overlayCount(label), 1)
+    }
+
+    @MainActor
+    func test_skeletonFalse_removesOverlay() {
+        let label = UILabel()
+        label.text = "￥00.00"
+        label.frame = CGRect(x: 0, y: 0, width: 120, height: 20)
+        label.skeleton(true)
+        label.skeleton(false)
+        XCTAssertEqual(overlayCount(label), 0)
+    }
+
+    @MainActor
+    func test_skeletonFalseWithoutActive_noCrash() {
+        let v = UIView()
+        v.skeleton(false)
+        XCTAssertEqual(overlayCount(v), 0)
+    }
+
+    @MainActor
+    func test_overlayDoesNotAffectIntrinsicSize() {
+        let label = UILabel()
+        label.text = "￥00.00"
+        let before = label.intrinsicContentSize
+        label.frame = CGRect(x: 0, y: 0, width: 120, height: 20)
+        label.skeleton(true)
+        XCTAssertEqual(label.intrinsicContentSize, before)
+    }
+}
 #endif

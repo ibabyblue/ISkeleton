@@ -65,7 +65,8 @@ import PackageDescription
 
 let package = Package(
     name: "ISkeleton",
-    platforms: [.iOS(.v15)],
+    // macOS 平台用于让 host `swift build`/`swift test` 通过（SwiftUI 需 macOS 12+；UIKit target 经 canImport 门控）。
+    platforms: [.iOS(.v15), .macOS(.v12)],
     products: [
         .library(name: "Skeleton-Core", targets: ["SkeletonCore"]),
         .library(name: "Skeleton-SwiftUI", targets: ["SkeletonSwiftUI"]),
@@ -182,7 +183,7 @@ final class SkeletonConfigurationTests: XCTestCase {
         XCTAssertEqual(c.duration, 1.4, accuracy: 1e-9)
         XCTAssertEqual(c.bandWidth, 0.6, accuracy: 1e-9)
         XCTAssertEqual(c.cornerRadius, 5, accuracy: 1e-9)
-        XCTAssertEqual(c.baseColor.a, 1, accuracy: 1e-9)
+        XCTAssertEqual(c.baseColor.a, 0.8, accuracy: 1e-9)
     }
 
     func test_isMutableValueType() {

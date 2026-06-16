@@ -1,10 +1,60 @@
 #if canImport(UIKit)
 import XCTest
+import UIKit
 @testable import SkeletonUIKit
 
 final class SkeletonUIKitPackageTests: XCTestCase {
     func test_packageBuilds() {
         XCTAssertTrue(true)
+    }
+}
+
+final class SkeletonLineLayoutTests: XCTestCase {
+
+    private func attr(_ s: String, _ size: CGFloat = 17) -> NSAttributedString {
+        NSAttributedString(string: s, attributes: [.font: UIFont.systemFont(ofSize: size)])
+    }
+
+    func test_singleShortLine_oneFragment_widthLessThanContainer() {
+        let lines = SkeletonLineLayout.lineRects(
+            for: attr("Hi"), width: 300, numberOfLines: 0,
+            lineBreakMode: .byWordWrapping)
+        XCTAssertEqual(lines.count, 1)
+        XCTAssertLessThan(lines[0].width, 300)
+        XCTAssertGreaterThan(lines[0].width, 0)
+    }
+
+    func test_longText_wrapsToMultipleLines() {
+        let long = String(repeating: "word ", count: 60)
+        let lines = SkeletonLineLayout.lineRects(
+            for: attr(long), width: 200, numberOfLines: 0,
+            lineBreakMode: .byWordWrapping)
+        XCTAssertGreaterThan(lines.count, 2)
+    }
+
+    func test_numberOfLinesLimitIsRespected() {
+        let long = String(repeating: "word ", count: 60)
+        let lines = SkeletonLineLayout.lineRects(
+            for: attr(long), width: 200, numberOfLines: 2,
+            lineBreakMode: .byTruncatingTail)
+        XCTAssertLessThanOrEqual(lines.count, 2)
+    }
+
+    func test_emptyText_returnsNoLines() {
+        let lines = SkeletonLineLayout.lineRects(
+            for: attr(""), width: 200, numberOfLines: 0,
+            lineBreakMode: .byWordWrapping)
+        XCTAssertTrue(lines.isEmpty)
+    }
+
+    func test_rgbaToUIColor_roundTripsComponents() {
+        let ui = SkeletonRGBA(r: 0.2, g: 0.4, b: 0.6, a: 0.8).uiColor
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
+        XCTAssertEqual(Double(r), 0.2, accuracy: 1e-3)
+        XCTAssertEqual(Double(g), 0.4, accuracy: 1e-3)
+        XCTAssertEqual(Double(b), 0.6, accuracy: 1e-3)
+        XCTAssertEqual(Double(a), 0.8, accuracy: 1e-3)
     }
 }
 #endif

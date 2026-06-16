@@ -10,12 +10,14 @@
 		53B50126CDA234626901CAB4 /* ISkeletonDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 606A76EB44040D105A4D4AC4 /* ISkeletonDemoApp.swift */; };
 		749E97F6E248120442487D7C /* Skeleton-UIKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7B04E271ABABCA6518D61A99 /* Skeleton-UIKit */; };
 		805D96D4F4E0EF9305B2917E /* Skeleton-SwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 37CCC6E82B72B17C0B750416 /* Skeleton-SwiftUI */; };
+		DE0CF2A712E290D6F086996A /* DemoProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA45E1160528288E5A8DA5A2 /* DemoProfile.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		006BD4FC191B3C2C9F62E129 /* ISkeleton */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ISkeleton; path = ..; sourceTree = SOURCE_ROOT; };
 		606A76EB44040D105A4D4AC4 /* ISkeletonDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISkeletonDemoApp.swift; sourceTree = "<group>"; };
 		8945EF2D8D03DFA43832B177 /* ISkeletonDemo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ISkeletonDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA45E1160528288E5A8DA5A2 /* DemoProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoProfile.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,6 +45,7 @@
 		1FFA8DBEB57617F502789416 /* ISkeletonDemo */ = {
 			isa = PBXGroup;
 			children = (
+				DA45E1160528288E5A8DA5A2 /* DemoProfile.swift */,
 				606A76EB44040D105A4D4AC4 /* ISkeletonDemoApp.swift */,
 			);
 			path = ISkeletonDemo;
@@ -125,6 +128,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DE0CF2A712E290D6F086996A /* DemoProfile.swift in Sources */,
 				53B50126CDA234626901CAB4 /* ISkeletonDemoApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

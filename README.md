@@ -186,6 +186,25 @@ collapses to zero — the shimmer disappears or jumps when real data arrives. Ru
 - **Fixed-size region** (an avatar, a thumbnail) → give it an *explicit frame*; its size is
   already content-independent.
 
+## Demo
+
+A runnable demo app lives in `demo/`. The Xcode project is generated with [XcodeGen](https://github.com/yonaskolb/XcodeGen) from `demo/project.yml`:
+
+```bash
+cd demo
+xcodegen generate   # only needed after editing project.yml
+open ISkeletonDemo.xcodeproj
+```
+
+Run it on an iOS simulator. Two tabs:
+
+- **SwiftUI** — each slot uses `.skeleton(isLoading)`; the multi-line bio renders as a single block overlay.
+- **UIKit** — each control uses `view.skeleton(true/false)`; the multi-line bio `UILabel` renders one shimmer bar per text line.
+
+Tap **Reload** in either tab to replay the loading → shimmer → real-content transition.
+
+(The generated `ISkeletonDemo.xcodeproj` is committed, so the demo also opens without XcodeGen installed.)
+
 ## License
 
 MIT.

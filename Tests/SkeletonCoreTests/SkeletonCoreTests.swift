@@ -72,3 +72,21 @@ final class ShimmerPhaseTests: XCTestCase {
         }
     }
 }
+
+final class SkeletonShapeTests: XCTestCase {
+    private let size = CGSize(width: 200, height: 20)
+
+    func test_roundedRect_nil_usesDefault() {
+        XCTAssertEqual(SkeletonShape.roundedRect(cornerRadius: nil).cornerRadius(for: size, default: 5), 5, accuracy: 1e-9)
+    }
+    func test_roundedRect_explicit_usesGiven() {
+        XCTAssertEqual(SkeletonShape.roundedRect(cornerRadius: 8).cornerRadius(for: size, default: 5), 8, accuracy: 1e-9)
+    }
+    func test_circle_isHalfMinDimension() {
+        XCTAssertEqual(SkeletonShape.circle.cornerRadius(for: CGSize(width: 80, height: 80), default: 5), 40, accuracy: 1e-9)
+        XCTAssertEqual(SkeletonShape.circle.cornerRadius(for: size, default: 5), 10, accuracy: 1e-9)
+    }
+    func test_capsule_isHalfMinDimension() {
+        XCTAssertEqual(SkeletonShape.capsule.cornerRadius(for: size, default: 5), 10, accuracy: 1e-9)
+    }
+}

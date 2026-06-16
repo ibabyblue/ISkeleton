@@ -51,7 +51,7 @@ of them gives you the config types too — you do not need to depend on `Skeleto
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ibabyblue/ISkeleton", from: "0.1.0")
+    .package(url: "https://github.com/ibabyblue/ISkeleton", from: "0.2.0")
 ],
 targets: [
     .target(name: "YourTarget", dependencies: [
@@ -95,10 +95,24 @@ struct ProductCell: View {
 }
 ```
 
-`.skeleton(_ active: Bool, cornerRadius: CGFloat? = nil)` hides the real content, keeps its
-footprint, and overlays a rounded shimmer. When `cornerRadius` is `nil` it falls back to the
-appearance's `cornerRadius`. `.skeletonAppearance(_:)` injects a `SkeletonConfiguration` into the
-environment; every `.skeleton` in the subtree reuses it.
+Use `shape:` to control the placeholder outline and `lines:` to draw a multi-line text
+placeholder:
+
+```swift
+// 圆形头像（shape: .circle）
+Circle().frame(width: 56, height: 56)
+    .skeleton(isLoading, shape: .circle)
+
+// 多行文本：画 3 条带间隔的占位条
+Text(bio).skeleton(isLoading, lines: 3)
+```
+
+`.skeleton(_ active: Bool, shape: SkeletonShape = ..., lines: Int = 1)` hides the real content,
+keeps its footprint, and overlays the shimmer. The `skeleton(_:shape:lines:)` signature replaces
+the old `cornerRadius:` parameter — pass `shape: .roundedRect(cornerRadius:)` for a custom corner
+radius, or `shape: .circle` for a circular placeholder. When the shape is left at its default the
+appearance's `cornerRadius` applies. `.skeletonAppearance(_:)` injects a `SkeletonConfiguration`
+into the environment; every `.skeleton` in the subtree reuses it.
 
 ## UIKit Usage
 
@@ -119,6 +133,10 @@ priceLabel.skeleton(model == nil)             // then activate
 // When the real data arrives:
 priceLabel.text = model.price
 priceLabel.skeleton(false)
+
+// Shape and multi-line variants:
+avatarView.skeleton(true, shape: .circle)   // 圆形头像
+bioLabel.skeleton(true)                       // numberOfLines = 0 → 自动逐行（带行间隔）
 ```
 
 **Contract — set text first, toggle to change text:** `skeleton(true)` snapshots the host's
@@ -127,10 +145,14 @@ calling `skeleton(true)`. To change the text while a skeleton is already active,
 first: `skeleton(false)` → set the new text → `skeleton(true)`. (Reactivating with the same
 state is idempotent and safe.)
 
-`skeleton(_ active: Bool, cornerRadius: CGFloat? = nil)` overlays the shimmer on the view's own
-`bounds` without affecting its intrinsic size; `cornerRadius` falls back to
-`Skeleton.appearance.cornerRadius` when `nil`. For a multi-line `UILabel`, the placeholder draws
-one bar per text line.
+`skeleton(_ active: Bool, shape: SkeletonShape = ...)` overlays the shimmer on the view's own
+`bounds` without affecting its intrinsic size; the default shape falls back to
+`Skeleton.appearance.cornerRadius`, while `shape: .circle` clips to a circle. For a multi-line
+`UILabel`, the placeholder draws one bar per text line.
+
+UIKit hides a `UILabel`'s text while the skeleton is active and restores it on deactivate, so the
+placeholder text never shows through under the shimmer. `attributedText` with explicit colors is
+out of scope.
 
 ## Configuration
 
@@ -164,11 +186,12 @@ let config = SkeletonConfiguration(
 
 Multi-line text is the one place the two frameworks intentionally diverge:
 
-- **SwiftUI** draws **one block overlay** covering the reserved footprint of the slot. SwiftUI
-  does not expose line-fragment introspection, so the placeholder cannot know where individual
-  lines wrap — it shimmers the whole rectangle.
-- **UIKit** draws **one bar per line** for a multi-line `UILabel`, because UIKit *does* expose
-  per-line layout, so the placeholder can mirror the real wrap.
+- **SwiftUI** uses an explicit `lines:` count: pass `lines: N` and the placeholder draws **N
+  spaced bars**. SwiftUI does not expose line-fragment introspection, so it cannot infer where
+  individual lines wrap — you tell it how many bars to draw, and each is laid out with a gap.
+- **UIKit** is **text-driven**: a multi-line `UILabel` draws **one bar per text line**
+  automatically, because UIKit *does* expose per-line layout, so the placeholder mirrors the real
+  wrap. Each bar is shrunk slightly to leave gaps between lines.
 
 Single-line slots look identical on both sides.
 

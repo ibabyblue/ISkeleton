@@ -11,7 +11,7 @@ struct ISkeletonDemoApp: App {
     var body: some Scene {
         WindowGroup {
             TabView {
-                Text("SwiftUI demo (placeholder)")
+                SwiftUIDemoView()
                     .tabItem { Label("SwiftUI", systemImage: "swift") }
                 Text("UIKit demo (placeholder)")
                     .tabItem { Label("UIKit", systemImage: "rectangle.on.rectangle") }

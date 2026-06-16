@@ -39,3 +39,36 @@ final class SkeletonConfigurationTests: XCTestCase {
         XCTAssertEqual(c.cornerRadius, 8, accuracy: 1e-9)
     }
 }
+
+final class ShimmerPhaseTests: XCTestCase {
+    func test_atZero_isNegativeBandWidth() {
+        let p = ShimmerPhase.phase(at: 0, duration: 1.4, bandWidth: 0.6)
+        XCTAssertEqual(p, -0.6, accuracy: 1e-9)
+    }
+
+    func test_nearEnd_approachesOne() {
+        let p = ShimmerPhase.phase(at: 1.4 - 1e-6, duration: 1.4, bandWidth: 0.6)
+        XCTAssertEqual(p, 1.0, accuracy: 1e-3)
+    }
+
+    func test_monotonicWithinCycle() {
+        let a = ShimmerPhase.phase(at: 0.3, duration: 1.4, bandWidth: 0.6)
+        let b = ShimmerPhase.phase(at: 0.9, duration: 1.4, bandWidth: 0.6)
+        XCTAssertGreaterThan(b, a)
+    }
+
+    func test_loopsByDuration() {
+        let p0 = ShimmerPhase.phase(at: 0.25, duration: 1.4, bandWidth: 0.6)
+        let p1 = ShimmerPhase.phase(at: 0.25 + 1.4, duration: 1.4, bandWidth: 0.6)
+        XCTAssertEqual(p0, p1, accuracy: 1e-9)
+    }
+
+    func test_rangeStaysWithinOffscreenBounds() {
+        for i in 0..<100 {
+            let t = Double(i) / 100 * 1.4
+            let p = ShimmerPhase.phase(at: t, duration: 1.4, bandWidth: 0.6)
+            XCTAssertGreaterThanOrEqual(p, -0.6 - 1e-9)
+            XCTAssertLessThanOrEqual(p, 1.0 + 1e-9)
+        }
+    }
+}

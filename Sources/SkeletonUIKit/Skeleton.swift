@@ -38,11 +38,12 @@ public extension UIView {
             ShimmerClock.shared.register(overlay)
             currentSkeletonOverlay = overlay
         } else {
+            // 先无条件还原文字（自守卫于 savedTextColor），使恢复不依赖 overlay 状态。
+            restoreLabelTextIfNeeded()
             guard let overlay = currentSkeletonOverlay else { return }
             ShimmerClock.shared.unregister(overlay)
             overlay.removeFromSuperview()
             currentSkeletonOverlay = nil
-            restoreLabelTextIfNeeded()
         }
     }
 

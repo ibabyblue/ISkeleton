@@ -27,6 +27,9 @@ final class ShimmerClock {
     private let driven = NSHashTable<AnyObject>.weakObjects()
     private var displayLink: CADisplayLink?
 
+    /// 测试用：当前注册（仍存活）的驱动对象数量。
+    var drivenCountForTesting: Int { driven.allObjects.count }
+
     private init() {
         NotificationCenter.default.addObserver(
             self, selector: #selector(handleForeground),

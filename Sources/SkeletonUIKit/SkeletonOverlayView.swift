@@ -39,6 +39,9 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
 
     var shimmerConfiguration: SkeletonConfiguration { configuration }
 
+    /// 测试用：当前已构建的底色占位条数量。
+    var builtBarCountForTesting: Int { barsLayer.sublayers?.count ?? 0 }
+
     override func layoutSubviews() {
         super.layoutSubviews()
         guard bounds.size != lastBuiltSize, !bounds.isEmpty else { return }

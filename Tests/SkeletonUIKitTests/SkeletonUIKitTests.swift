@@ -111,4 +111,60 @@ final class UIViewSkeletonTests: XCTestCase {
         XCTAssertEqual(label.intrinsicContentSize, before)
     }
 }
+
+final class SkeletonOverlayBehaviorTests: XCTestCase {
+
+    @MainActor
+    private func firstOverlay(_ v: UIView) -> SkeletonOverlayView? {
+        v.subviews.compactMap { $0 as? SkeletonOverlayView }.first
+    }
+
+    @MainActor
+    func test_skeletonAfterExternalRemoval_reattachesWithoutCrash() {
+        let label = UILabel()
+        label.text = "￥00.00"
+        label.frame = CGRect(x: 0, y: 0, width: 120, height: 20)
+        label.skeleton(true)
+        // 模拟视图复用：外部直接移除 overlay
+        label.subviews.compactMap { $0 as? SkeletonOverlayView }.forEach { $0.removeFromSuperview() }
+        // 再次激活：不崩溃，且重新挂上恰好一个 overlay
+        label.skeleton(true)
+        XCTAssertEqual(label.subviews.filter { $0 is SkeletonOverlayView }.count, 1)
+    }
+
+    @MainActor
+    func test_singleLineLabel_buildsOneBar() {
+        let label = UILabel()
+        label.text = "Hi"
+        label.frame = CGRect(x: 0, y: 0, width: 300, height: 24)
+        label.skeleton(true)
+        let overlay = firstOverlay(label)
+        overlay?.layoutIfNeeded()
+        XCTAssertEqual(overlay?.builtBarCountForTesting, 1)
+    }
+
+    @MainActor
+    func test_multiLineLabel_buildsMultipleBars() {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.text = String(repeating: "word ", count: 60)
+        label.frame = CGRect(x: 0, y: 0, width: 200, height: 200)
+        label.skeleton(true)
+        let overlay = firstOverlay(label)
+        overlay?.layoutIfNeeded()
+        XCTAssertGreaterThan(overlay?.builtBarCountForTesting ?? 0, 1)
+    }
+
+    @MainActor
+    func test_shimmerClock_registersWhileActiveAndUnregistersWhenInactive() {
+        let label = UILabel()
+        label.text = "x"
+        label.frame = CGRect(x: 0, y: 0, width: 80, height: 20)
+        let before = ShimmerClock.shared.drivenCountForTesting
+        label.skeleton(true)
+        XCTAssertEqual(ShimmerClock.shared.drivenCountForTesting, before + 1)
+        label.skeleton(false)
+        XCTAssertEqual(ShimmerClock.shared.drivenCountForTesting, before)
+    }
+}
 #endif

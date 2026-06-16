@@ -119,7 +119,7 @@ final class CardView: UIView {
             nameLabel.text = DemoProfile.placeholderName
             priceLabel.text = DemoProfile.placeholderPrice
             bioLabel.text = DemoProfile.placeholderBio
-            avatar.skeleton(true)
+            avatar.skeleton(true, shape: .circle)
             nameLabel.skeleton(true)
             priceLabel.skeleton(true)
             bioLabel.skeleton(true)

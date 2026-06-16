@@ -36,14 +36,14 @@ struct SwiftUIDemoView: View {
             Circle()
                 .fill(Color.gray.opacity(0.2))
                 .frame(width: 56, height: 56)
-                .skeleton(isLoading)
+                .skeleton(isLoading, shape: .circle)
             VStack(alignment: .leading, spacing: 8) {
                 Text(p.name).font(.headline)
                     .skeleton(isLoading)
                 Text(p.price).font(.subheadline).foregroundStyle(.pink)
                     .skeleton(isLoading)
                 Text(p.bio).font(.footnote).foregroundStyle(.secondary)
-                    .skeleton(isLoading)
+                    .skeleton(isLoading, lines: 3)
             }
             Spacer(minLength: 0)
         }

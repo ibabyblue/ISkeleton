@@ -13,7 +13,8 @@ struct ISkeletonDemoApp: App {
             TabView {
                 SwiftUIDemoView()
                     .tabItem { Label("SwiftUI", systemImage: "swift") }
-                Text("UIKit demo (placeholder)")
+                UIKitDemoScreen()
+                    .ignoresSafeArea()
                     .tabItem { Label("UIKit", systemImage: "rectangle.on.rectangle") }
             }
         }

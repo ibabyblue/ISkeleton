@@ -167,4 +167,49 @@ final class SkeletonOverlayBehaviorTests: XCTestCase {
         XCTAssertEqual(ShimmerClock.shared.drivenCountForTesting, before)
     }
 }
+
+final class SkeletonFidelityTests: XCTestCase {
+
+    @MainActor
+    private func firstOverlay(_ v: UIView) -> SkeletonOverlayView? {
+        v.subviews.compactMap { $0 as? SkeletonOverlayView }.first
+    }
+
+    @MainActor
+    func test_circleShape_singleBarRadiusIsHalfMinDimension() {
+        let v = UIView(frame: CGRect(x: 0, y: 0, width: 56, height: 56))
+        v.skeleton(true, shape: .circle)
+        let overlay = firstOverlay(v)
+        overlay?.layoutIfNeeded()
+        XCTAssertEqual(overlay?.builtBarRadiiForTesting.first ?? 0, 28, accuracy: 0.5)
+    }
+
+    @MainActor
+    func test_multiLineBars_haveVerticalGaps() {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.text = String(repeating: "word ", count: 60)
+        label.frame = CGRect(x: 0, y: 0, width: 200, height: 200)
+        label.skeleton(true)
+        let overlay = firstOverlay(label)
+        overlay?.layoutIfNeeded()
+        let frames = (overlay?.builtBarFramesForTesting ?? []).sorted { $0.minY < $1.minY }
+        XCTAssertGreaterThan(frames.count, 1)
+        for i in 0..<(frames.count - 1) {
+            XCTAssertLessThan(frames[i].maxY, frames[i + 1].minY)
+        }
+    }
+
+    @MainActor
+    func test_skeletonHidesLabelTextColorAndRestores() {
+        let label = UILabel()
+        label.text = "hi"
+        label.textColor = .systemBlue
+        label.frame = CGRect(x: 0, y: 0, width: 120, height: 20)
+        label.skeleton(true)
+        XCTAssertEqual(label.textColor, .clear)
+        label.skeleton(false)
+        XCTAssertEqual(label.textColor, .systemBlue)
+    }
+}
 #endif

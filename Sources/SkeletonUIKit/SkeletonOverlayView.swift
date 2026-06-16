@@ -5,21 +5,24 @@ import SkeletonCore
 /// 覆盖在 host 上的扫光占位层。不参与 host 的 intrinsic size；尺寸跟随 host bounds。
 final class SkeletonOverlayView: UIView, ShimmerDriven {
 
+    /// 单个占位条的几何：矩形 + 圆角。
+    private struct Bar { let rect: CGRect; let radius: CGFloat }
+
     let configuration: SkeletonConfiguration
-    private let cornerRadius: CGFloat
+    private let shape: SkeletonShape
+    /// 逐行条相对行高的高度比例（留出行间隔）。
+    private let lineFillRatio: CGFloat = 0.62
     /// 弱引用 host，用于读取 UILabel 的文案排版信息。
     private weak var host: UIView?
 
-    /// 所有占位条所在的容器层。
     private let barsLayer = CALayer()
-    /// 扫光高光渐变层；以占位条形状作 mask，只在条形区域透出高光。
     private let shimmerLayer = CAGradientLayer()
     private var lastBuiltSize: CGSize = .zero
 
-    init(host: UIView, configuration: SkeletonConfiguration, cornerRadius: CGFloat) {
+    init(host: UIView, configuration: SkeletonConfiguration, shape: SkeletonShape) {
         self.host = host
         self.configuration = configuration
-        self.cornerRadius = cornerRadius
+        self.shape = shape
         super.init(frame: host.bounds)
         isUserInteractionEnabled = false
         autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -39,8 +42,10 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
 
     var shimmerConfiguration: SkeletonConfiguration { configuration }
 
-    /// 测试用：当前已构建的底色占位条数量。
+    /// 测试用：当前占位条数量 / frame / 圆角。
     var builtBarCountForTesting: Int { barsLayer.sublayers?.count ?? 0 }
+    var builtBarFramesForTesting: [CGRect] { (barsLayer.sublayers ?? []).map { $0.frame } }
+    var builtBarRadiiForTesting: [CGFloat] { (barsLayer.sublayers ?? []).map { $0.cornerRadius } }
 
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -49,8 +54,6 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         rebuildBars()
     }
 
-    /// 按 host 形态重建占位条：barsLayer 画底色条；shimmerLayer 覆盖 bounds 并以同形状的 mask
-    /// 只在条形区域透出高光。高光的移动靠 applyShimmerPhase 改 start/endPoint（不动 frame）。
     private func rebuildBars() {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -58,21 +61,19 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         barsLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
 
         let base = configuration.baseColor.uiColor.cgColor
-        let rects = barRects()
         let maskContainer = CALayer()
         maskContainer.frame = bounds
-        for r in rects {
-            let radius = min(cornerRadius, r.height / 2)
-            let bar = CALayer()
-            bar.frame = r
-            bar.backgroundColor = base
-            bar.cornerRadius = radius
-            barsLayer.addSublayer(bar)
+        for bar in barSpecs() {
+            let layerBar = CALayer()
+            layerBar.frame = bar.rect
+            layerBar.backgroundColor = base
+            layerBar.cornerRadius = bar.radius
+            barsLayer.addSublayer(layerBar)
 
             let maskBar = CALayer()
-            maskBar.frame = r
+            maskBar.frame = bar.rect
             maskBar.backgroundColor = UIColor.white.cgColor
-            maskBar.cornerRadius = radius
+            maskBar.cornerRadius = bar.radius
             maskContainer.addSublayer(maskBar)
         }
         shimmerLayer.frame = bounds
@@ -80,21 +81,31 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         CATransaction.commit()
     }
 
-    /// 计算占位条矩形：UILabel → 逐行；其它 → 单条覆盖 bounds。
-    private func barRects() -> [CGRect] {
-        if let label = host as? UILabel, let text = label.attributedText ?? label.text.map({
-            NSAttributedString(string: $0, attributes: [.font: label.font as Any]) }) {
+    /// UILabel → 逐行（每条按行高收缩、垂直居中，留出间隔）；其它 → 单条覆盖 bounds（用 shape 圆角）。
+    private func barSpecs() -> [Bar] {
+        if let label = host as? UILabel, let text = labelText(label) {
             let lineRects = SkeletonLineLayout.lineRects(
                 for: text, width: bounds.width,
                 numberOfLines: label.numberOfLines,
                 lineBreakMode: label.lineBreakMode)
-            return lineRects.isEmpty ? [bounds] : lineRects
+            if !lineRects.isEmpty {
+                return lineRects.map { line in
+                    let h = line.height * lineFillRatio
+                    let rect = CGRect(x: line.minX, y: line.midY - h / 2, width: line.width, height: h)
+                    return Bar(rect: rect, radius: min(configuration.cornerRadius, h / 2))
+                }
+            }
         }
-        return [bounds]
+        let radius = shape.cornerRadius(for: bounds.size, default: configuration.cornerRadius)
+        return [Bar(rect: bounds, radius: radius)]
     }
 
-    /// ShimmerClock 每帧回调：phase 是高光带前缘的归一化位置；通过移动渐变的 start/endPoint
-    /// 让 [clear, highlight, clear] 的高光从左扫到右（与 SwiftUI 实现一致）。layer 不动，故 mask 稳定。
+    private func labelText(_ label: UILabel) -> NSAttributedString? {
+        if let attr = label.attributedText { return attr }
+        if let t = label.text { return NSAttributedString(string: t, attributes: [.font: label.font as Any]) }
+        return nil
+    }
+
     func applyShimmerPhase(_ phase: CGFloat) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)

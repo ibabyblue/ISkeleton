@@ -9,30 +9,29 @@ public enum Skeleton {
     nonisolated(unsafe) public static var appearance: SkeletonConfiguration = .default
 }
 
-/// 关联对象 key：独立分配的稳定指针，避免对可变全局取址（严格并发友好）。
+/// 关联对象 key：独立分配的稳定指针。
 nonisolated(unsafe) private let skeletonOverlayKey = malloc(1)!
+nonisolated(unsafe) private let skeletonTextColorKey = malloc(1)!
 
 public extension UIView {
-    /// active 时在自身 bounds 上叠加扫光占位（不参与 intrinsic size）；false 时移除并恢复真实内容。
-    /// 尺寸完全由 host 自身内容/文案撑起；UILabel 会按文案逐行画占位条。
-    /// cornerRadius 为 nil 时取 `Skeleton.appearance.cornerRadius`。
+    /// active 时叠加骨架并隐藏 host 内容（UILabel 文字）；false 移除并还原。
+    /// 非 UILabel：单条用 `shape`（如 `.circle` 圆形头像）；UILabel：文案驱动逐行（shape 被忽略）。
     ///
-    /// 契约：loading 前先给 host 设置代表性内容（UILabel 设代表性文案）来撑出尺寸/行数，再调 `skeleton(true)`；
-    /// 占位条在 overlay 创建时及尺寸变化时构建。若在骨架激活期间修改 host 文案，请先 `skeleton(false)` 再设文案后重新 `skeleton(true)`。
-    func skeleton(_ active: Bool, cornerRadius: CGFloat? = nil) {
+    /// 契约：loading 前先给 host 设置代表性内容（UILabel 设代表性文案）撑出尺寸/行数，再 `skeleton(true)`；
+    /// 骨架激活期间改文案，请先 `skeleton(false)` 再设文案后重新 `skeleton(true)`。
+    /// 注：仅隐藏 UILabel 的 `textColor`；`attributedText` 中显式着色的富文本不在此机制内。
+    func skeleton(_ active: Bool, shape: SkeletonShape = .roundedRect(cornerRadius: nil)) {
         if active {
             if let existing = currentSkeletonOverlay, existing.superview === self {
-                return   // 已激活且仍在视图层级：幂等
+                return   // 幂等
             }
-            // 旧 overlay 可能已被视图复用等外部路径移除：先清理再重建，避免野指针/重复。
             if let stale = currentSkeletonOverlay {
                 ShimmerClock.shared.unregister(stale)
                 stale.removeFromSuperview()
             }
+            hideLabelTextIfNeeded()
             let config = Skeleton.appearance
-            let overlay = SkeletonOverlayView(
-                host: self, configuration: config,
-                cornerRadius: cornerRadius ?? config.cornerRadius)
+            let overlay = SkeletonOverlayView(host: self, configuration: config, shape: shape)
             addSubview(overlay)
             overlay.setNeedsLayout()
             overlay.layoutIfNeeded()
@@ -43,12 +42,31 @@ public extension UIView {
             ShimmerClock.shared.unregister(overlay)
             overlay.removeFromSuperview()
             currentSkeletonOverlay = nil
+            restoreLabelTextIfNeeded()
         }
+    }
+
+    /// 暂存并清空 UILabel 文字颜色（骨架期不可见真实文字）。
+    private func hideLabelTextIfNeeded() {
+        guard let label = self as? UILabel, savedTextColor == nil else { return }
+        savedTextColor = label.textColor
+        label.textColor = .clear
+    }
+
+    private func restoreLabelTextIfNeeded() {
+        guard let label = self as? UILabel, let color = savedTextColor else { return }
+        label.textColor = color
+        savedTextColor = nil
     }
 
     private var currentSkeletonOverlay: SkeletonOverlayView? {
         get { objc_getAssociatedObject(self, skeletonOverlayKey) as? SkeletonOverlayView }
         set { objc_setAssociatedObject(self, skeletonOverlayKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+
+    private var savedTextColor: UIColor? {
+        get { objc_getAssociatedObject(self, skeletonTextColorKey) as? UIColor }
+        set { objc_setAssociatedObject(self, skeletonTextColorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
 }
 #endif

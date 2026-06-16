@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "ISkeleton",
-    platforms: [.iOS(.v15)],
+    platforms: [.iOS(.v15), .macOS(.v12)],
     products: [
         .library(name: "Skeleton-Core", targets: ["SkeletonCore"]),
         .library(name: "Skeleton-SwiftUI", targets: ["SkeletonSwiftUI"]),

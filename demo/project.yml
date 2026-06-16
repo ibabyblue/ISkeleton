@@ -1,0 +1,28 @@
+name: ISkeletonDemo
+options:
+  bundleIdPrefix: com.ibabyblue
+  deploymentTarget:
+    iOS: "15.0"
+packages:
+  ISkeleton:
+    path: ..
+targets:
+  ISkeletonDemo:
+    type: application
+    platform: iOS
+    sources:
+      - ISkeletonDemo
+    dependencies:
+      - package: ISkeleton
+        product: Skeleton-SwiftUI
+      - package: ISkeleton
+        product: Skeleton-UIKit
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.ibabyblue.ISkeletonDemo
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: "5.10"
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES

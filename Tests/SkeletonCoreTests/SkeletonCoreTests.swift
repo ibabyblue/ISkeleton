@@ -90,3 +90,25 @@ final class SkeletonShapeTests: XCTestCase {
         XCTAssertEqual(SkeletonShape.capsule.cornerRadius(for: size, default: 5), 10, accuracy: 1e-9)
     }
 }
+
+final class SkeletonLineMetricsTests: XCTestCase {
+    func test_lineCount_roundsToNearest() {
+        XCTAssertEqual(SkeletonLineMetrics.lineCount(height: 60, lineHeight: 20), 3)
+        XCTAssertEqual(SkeletonLineMetrics.lineCount(height: 69, lineHeight: 20), 3)   // 3.45 → 3
+        XCTAssertEqual(SkeletonLineMetrics.lineCount(height: 71, lineHeight: 20), 4)   // 3.55 → 4
+    }
+    func test_lineCount_atLeastOne() {
+        XCTAssertEqual(SkeletonLineMetrics.lineCount(height: 5, lineHeight: 20), 1)
+        XCTAssertEqual(SkeletonLineMetrics.lineCount(height: 0, lineHeight: 20), 1)
+    }
+    func test_lineCount_invalidLineHeight_isOne() {
+        XCTAssertEqual(SkeletonLineMetrics.lineCount(height: 100, lineHeight: 0), 1)
+        XCTAssertEqual(SkeletonLineMetrics.lineCount(height: 100, lineHeight: -5), 1)
+    }
+    func test_barHeight_defaultRatio() {
+        XCTAssertEqual(SkeletonLineMetrics.barHeight(lineHeight: 20), 14, accuracy: 1e-9)
+    }
+    func test_barHeight_neverNegative() {
+        XCTAssertEqual(SkeletonLineMetrics.barHeight(lineHeight: -10), 0, accuracy: 1e-9)
+    }
+}

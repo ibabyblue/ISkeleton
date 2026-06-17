@@ -103,9 +103,47 @@ placeholder:
 Circle().frame(width: 56, height: 56)
     .skeleton(isLoading, shape: .circle)
 
-// 多行文本：按 footprint 高度自动画占位条（条数随换行）
+// 多行文本：占位文案折几行，骨架就画几条（条数 = footprint 高度 ÷ 行高）
 Text(bio).skeleton(isLoading, textStyle: .footnote)
 ```
+
+A complete card — circle avatar, single-line name/price, multi-line bio — mirroring the demo:
+
+```swift
+import SkeletonSwiftUI
+
+struct ProfileCard: View {
+    let profile: Profile?                       // nil while loading
+    private var isLoading: Bool { profile == nil }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Circle().frame(width: 56, height: 56)
+                .skeleton(isLoading, shape: .circle)               // 圆形头像
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(profile?.name ?? "Loading name")              // 单行：跟随文本尺寸
+                    .font(.headline)
+                    .skeleton(isLoading)
+
+                Text(profile?.price ?? "￥00.00")
+                    .font(.subheadline)
+                    .skeleton(isLoading)
+
+                // 多行：喂一段「折行数与真实数据相近」的占位，shimmer 行数才会对得上
+                Text(profile?.bio ?? "热爱旅行与摄影，周末喜欢去山里露营，记录值得纪念的瞬间。")
+                    .font(.footnote)
+                    .skeleton(isLoading, textStyle: .footnote)     // textStyle 要与 .font 一致
+            }
+        }
+        .skeletonAppearance(.default)
+    }
+}
+```
+
+> Multi-line tip: the bar count comes from how the *placeholder* wraps, since the real data isn't
+> loaded yet. Feed a representative string whose line count matches the typical real text, and pass
+> the **same** text style to `.font` and `textStyle:` so the line height lines up.
 
 `.skeleton(_ active: Bool, shape: SkeletonShape = ..., textStyle: Font.TextStyle? = nil)` hides the real content,
 keeps its footprint, and overlays the shimmer. The `skeleton(_:shape:textStyle:)` signature replaces
@@ -125,18 +163,30 @@ import SkeletonUIKit
 
 // At app launch, once:
 Skeleton.appearance = .default
+```
 
-// When configuring a cell with possibly-missing data:
-priceLabel.text = model?.price ?? "￥00.00"   // representative text first
-priceLabel.skeleton(model == nil)             // then activate
+A complete card configure — same slots as the SwiftUI example. Note the contract: **set
+representative text first, then activate**; `bioLabel.numberOfLines = 0` so it wraps freely.
 
-// When the real data arrives:
-priceLabel.text = model.price
-priceLabel.skeleton(false)
+```swift
+// bioLabel.numberOfLines = 0  // configured once at setup
 
-// Shape and multi-line variants:
-avatarView.skeleton(true, shape: .circle)   // 圆形头像
-bioLabel.skeleton(true)                       // numberOfLines = 0 → 自动逐行（带行间隔）
+func configure(with profile: Profile?) {
+    if let profile {                                   // data arrived → real content
+        avatarView.skeleton(false)
+        nameLabel.skeleton(false);  nameLabel.text  = profile.name
+        priceLabel.skeleton(false); priceLabel.text = profile.price
+        bioLabel.skeleton(false);   bioLabel.text   = profile.bio
+    } else {                                           // loading → representative text FIRST
+        nameLabel.text  = "Loading name"
+        priceLabel.text = "￥00.00"
+        bioLabel.text   = "热爱旅行与摄影，周末喜欢去山里露营，记录值得纪念的瞬间。"
+        avatarView.skeleton(true, shape: .circle)      // 圆形头像
+        nameLabel.skeleton(true)
+        priceLabel.skeleton(true)
+        bioLabel.skeleton(true)                        // numberOfLines = 0 → 按真实文本逐行画条
+    }
+}
 ```
 
 **Contract — set text first, toggle to change text:** `skeleton(true)` snapshots the host's

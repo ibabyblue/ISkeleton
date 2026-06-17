@@ -3,10 +3,11 @@ import UIKit
 import SkeletonCore
 import ObjectiveC
 
-/// 全局骨架外观入口。建议在主线程（App 启动时）一次性设置。
+/// 全局骨架外观入口。仅主线程读写（App 启动时一次性设置）。
+@MainActor
 public enum Skeleton {
-    /// 全局默认外观；所有 `skeleton(_:)` 默认使用。
-    nonisolated(unsafe) public static var appearance: SkeletonConfiguration = .default
+    /// 全局默认外观；所有 `skeleton(_:)` 默认使用（未传 per-call appearance 时）。
+    public static var appearance: SkeletonConfiguration = .default
 }
 
 /// 关联对象 key：独立分配的稳定指针。
@@ -21,6 +22,7 @@ public extension UIView {
     /// 骨架激活期间改文案，请先 `skeleton(false)` 再设文案后重新 `skeleton(true)`。
     /// 注：仅隐藏 UILabel 的 `textColor`；`attributedText` 中显式着色的富文本不在此机制内。
     /// `appearance` 非空时仅本次激活使用，否则用全局 `Skeleton.appearance`。
+    @MainActor
     func skeleton(_ active: Bool,
                   shape: SkeletonShape = .roundedRect(cornerRadius: nil),
                   appearance: SkeletonConfiguration? = nil) {

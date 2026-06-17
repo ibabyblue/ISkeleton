@@ -112,3 +112,34 @@ final class SkeletonLineMetricsTests: XCTestCase {
         XCTAssertEqual(SkeletonLineMetrics.barHeight(lineHeight: -10), 0, accuracy: 1e-9)
     }
 }
+
+final class ShimmerDirectionTests: XCTestCase {
+    func test_leftToRight_reducesToCurrentHorizontal() {
+        let pts = ShimmerDirection.leftToRight.gradientPoints(phase: 0.3, bandWidth: 0.6)
+        XCTAssertEqual(pts.start.x, 0.3, accuracy: 1e-9)
+        XCTAssertEqual(pts.start.y, 0.5, accuracy: 1e-9)
+        XCTAssertEqual(pts.end.x, 0.9, accuracy: 1e-9)
+        XCTAssertEqual(pts.end.y, 0.5, accuracy: 1e-9)
+    }
+
+    func test_topRightToBottomLeft_endpoints() {
+        XCTAssertEqual(ShimmerDirection.topRightToBottomLeft.start, CGPoint(x: 1, y: 0))
+        XCTAssertEqual(ShimmerDirection.topRightToBottomLeft.end, CGPoint(x: 0, y: 1))
+    }
+
+    func test_topRightToBottomLeft_gradientPointsAtPhaseZero() {
+        let pts = ShimmerDirection.topRightToBottomLeft.gradientPoints(phase: 0, bandWidth: 0.6)
+        XCTAssertEqual(pts.start.x, 1, accuracy: 1e-9)
+        XCTAssertEqual(pts.start.y, 0, accuracy: 1e-9)
+        XCTAssertEqual(pts.end.x, 0.4, accuracy: 1e-9)
+        XCTAssertEqual(pts.end.y, 0.6, accuracy: 1e-9)
+    }
+
+    func test_allCases_startAndEndWithinUnitSquare() {
+        for d in ShimmerDirection.allCases {
+            for p in [d.start, d.end] {
+                XCTAssertTrue((0...1).contains(p.x) && (0...1).contains(p.y), "\(d)")
+            }
+        }
+    }
+}

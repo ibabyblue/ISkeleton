@@ -15,5 +15,6 @@ let package = Package(
         .target(name: "SkeletonUIKit", dependencies: ["SkeletonCore"]),
         .testTarget(name: "SkeletonCoreTests", dependencies: ["SkeletonCore"]),
         .testTarget(name: "SkeletonUIKitTests", dependencies: ["SkeletonUIKit"]),
+        .testTarget(name: "SkeletonSwiftUITests", dependencies: ["SkeletonSwiftUI"]),
     ]
 )

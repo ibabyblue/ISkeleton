@@ -61,10 +61,11 @@ private struct ShimmerSingle: View {
     }
 
     private func fill(phase: CGFloat) -> some View {
-        config.baseColor.color.overlay {
+        let pts = config.direction.gradientPoints(phase: phase, bandWidth: config.bandWidth)
+        return config.baseColor.color.overlay {
             LinearGradient(colors: [.clear, config.highlightColor.color, .clear],
-                           startPoint: UnitPoint(x: phase, y: 0.5),
-                           endPoint: UnitPoint(x: phase + config.bandWidth, y: 0.5))
+                           startPoint: UnitPoint(x: pts.start.x, y: pts.start.y),
+                           endPoint: UnitPoint(x: pts.end.x, y: pts.end.y))
         }
     }
 }
@@ -97,12 +98,13 @@ private struct ShimmerLines: View {
 
     private func bar(width: CGFloat, height: CGFloat, phase: CGFloat) -> some View {
         let shape = RoundedRectangle(cornerRadius: min(config.cornerRadius, height / 2), style: .continuous)
+        let pts = config.direction.gradientPoints(phase: phase, bandWidth: config.bandWidth)
         return HStack(spacing: 0) {
             config.baseColor.color
                 .overlay {
                     LinearGradient(colors: [.clear, config.highlightColor.color, .clear],
-                                   startPoint: UnitPoint(x: phase, y: 0.5),
-                                   endPoint: UnitPoint(x: phase + config.bandWidth, y: 0.5))
+                                   startPoint: UnitPoint(x: pts.start.x, y: pts.start.y),
+                                   endPoint: UnitPoint(x: pts.end.x, y: pts.end.y))
                 }
                 .frame(width: width, height: height)
                 .clipShape(shape)

@@ -3,26 +3,27 @@ import SkeletonCore
 
 public extension View {
     /// active 时：隐藏真实内容但保留 footprint，叠加骨架占位；false 时原样显示。
-    /// - shape: 单条形状（lines<=1 时生效）。
-    /// - lines: >1 时按多行渲染（忽略 shape，画 lines 条带间隔的圆角条，末行较短）。
+    /// - shape: 图形占位形状（textStyle == nil 时生效，用于头像等）。
+    /// - textStyle: 传入则按文本骨架渲染 —— 用该 TextStyle 的单行高度除 footprint 高度自动算行数（忽略 shape）。
     func skeleton(_ active: Bool,
                   shape: SkeletonShape = .roundedRect(cornerRadius: nil),
-                  lines: Int = 1) -> some View {
-        modifier(SkeletonModifier(active: active, shape: shape, lines: lines))
+                  textStyle: Font.TextStyle? = nil) -> some View {
+        modifier(SkeletonModifier(active: active, shape: shape, textStyle: textStyle))
     }
 }
 
 private struct SkeletonModifier: ViewModifier {
     let active: Bool
     let shape: SkeletonShape
-    let lines: Int
+    let textStyle: Font.TextStyle?
     @Environment(\.skeletonAppearance) private var config
 
     func body(content: Content) -> some View {
         if active {
             content.hidden().overlay {
-                if lines > 1 {
-                    ShimmerLines(config: config, lines: lines)
+                if let textStyle {
+                    ShimmerLines(config: config,
+                                 lineHeight: TextStyleMetrics.lineHeight(for: textStyle))
                 } else {
                     ShimmerSingle(config: config, shape: shape)
                 }
@@ -68,27 +69,28 @@ private struct ShimmerSingle: View {
     }
 }
 
-/// 多行：把 footprint 高度均分为 lines 条圆角条，带间隔、末行约 60% 宽，全部同相位扫光。
+/// 多行文本骨架：用 SkeletonLineMetrics 由 footprint 高度自动算行数，每行占 lineHeight、
+/// 条本体 ≈ 字形主体，顶对齐排列、底部余量留白；末行约 60% 宽，全部同相位扫光。
 private struct ShimmerLines: View {
     let config: SkeletonConfiguration
-    let lines: Int
+    let lineHeight: CGFloat
 
     var body: some View {
         GeometryReader { geo in
-            let n = max(1, lines)
-            let gapRatio: CGFloat = 0.35
-            let barH = geo.size.height / (CGFloat(n) + gapRatio * CGFloat(n - 1))
-            let gap = barH * gapRatio
+            let n = SkeletonLineMetrics.lineCount(height: geo.size.height, lineHeight: lineHeight)
+            let barH = SkeletonLineMetrics.barHeight(lineHeight: lineHeight)
+            let gap = max(0, lineHeight - barH)
             TimelineView(.animation) { context in
                 let phase = ShimmerPhase.phase(
                     at: context.date.timeIntervalSinceReferenceDate,
                     duration: config.duration, bandWidth: config.bandWidth)
-                VStack(spacing: gap) {
+                VStack(alignment: .leading, spacing: gap) {
                     ForEach(0..<n, id: \.self) { i in
                         bar(width: i == n - 1 ? geo.size.width * 0.6 : geo.size.width,
                             height: barH, phase: phase)
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         }
     }

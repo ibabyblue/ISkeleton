@@ -32,8 +32,10 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         shimmerLayer.colors = [UIColor.clear.cgColor,
                                configuration.highlightColor.uiColor.cgColor,
                                UIColor.clear.cgColor]
-        shimmerLayer.startPoint = CGPoint(x: 0, y: 0.5)
-        shimmerLayer.endPoint = CGPoint(x: 1, y: 0.5)
+        let initialPoints = configuration.direction.gradientPoints(
+            phase: -configuration.bandWidth, bandWidth: configuration.bandWidth)
+        shimmerLayer.startPoint = initialPoints.start
+        shimmerLayer.endPoint = initialPoints.end
         layer.addSublayer(shimmerLayer)
     }
 
@@ -107,10 +109,11 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
     }
 
     func applyShimmerPhase(_ phase: CGFloat) {
+        let pts = configuration.direction.gradientPoints(phase: phase, bandWidth: configuration.bandWidth)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        shimmerLayer.startPoint = CGPoint(x: phase, y: 0.5)
-        shimmerLayer.endPoint = CGPoint(x: phase + configuration.bandWidth, y: 0.5)
+        shimmerLayer.startPoint = pts.start
+        shimmerLayer.endPoint = pts.end
         CATransaction.commit()
     }
 }

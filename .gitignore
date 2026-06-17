@@ -6,3 +6,6 @@ DerivedData/
 xcuserdata/
 *.xcuserstate
 **/xcshareddata/IDEWorkspaceChecks.plist
+
+# superpowers 规划产物（plan/spec），本地保留不入库
+docs/

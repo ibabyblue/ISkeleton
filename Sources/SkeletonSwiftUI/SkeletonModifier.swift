@@ -86,7 +86,7 @@ private struct ShimmerLines: View {
                     duration: config.duration, bandWidth: config.bandWidth)
                 VStack(alignment: .leading, spacing: gap) {
                     ForEach(0..<n, id: \.self) { i in
-                        bar(width: i == n - 1 ? geo.size.width * 0.6 : geo.size.width,
+                        bar(width: (n > 1 && i == n - 1) ? geo.size.width * 0.6 : geo.size.width,
                             height: barH, phase: phase)
                     }
                 }

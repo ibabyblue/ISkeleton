@@ -233,7 +233,7 @@ final class SkeletonAppearanceOverrideTests: XCTestCase {
         let v = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 20))
         v.skeleton(true, appearance: custom)
 
-        XCTAssertEqual(firstOverlay(v)?.configuration.baseColor, custom.baseColor)
+        XCTAssertEqual(firstOverlay(v)?.configuration, custom)
     }
 
     @MainActor
@@ -247,7 +247,7 @@ final class SkeletonAppearanceOverrideTests: XCTestCase {
         let v = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 20))
         v.skeleton(true)
 
-        XCTAssertEqual(firstOverlay(v)?.configuration.baseColor, global.baseColor)
+        XCTAssertEqual(firstOverlay(v)?.configuration, global)
     }
 }
 #endif

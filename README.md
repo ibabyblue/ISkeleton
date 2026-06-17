@@ -189,7 +189,7 @@ func configure(with profile: Profile?) {
 }
 ```
 
-Per-view override — pass `appearance:` to use a custom appearance for just this activation, while
+Per-call override — pass `appearance:` to use a custom appearance for just this activation, while
 everything else keeps the global default:
 
 ```swift

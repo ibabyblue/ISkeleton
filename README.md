@@ -293,12 +293,26 @@ xcodegen generate   # only needed after editing project.yml
 open ISkeletonDemo.xcodeproj
 ```
 
-Run it on an iOS simulator. Two tabs:
+Run it on an iOS simulator. Two tabs, each with a live **control panel** at the top that drives
+every public knob and applies instantly:
 
-- **SwiftUI** — each slot uses `.skeleton(isLoading)`; the multi-line bio uses `.skeleton(isLoading, textStyle: .footnote)` and draws one bar per wrapped line.
-- **UIKit** — each control uses `view.skeleton(true/false)`; the multi-line bio `UILabel` renders one shimmer bar per text line.
+- **Direction** — pick any of the 8 `ShimmerDirection` presets and watch the sweep follow.
+- **Shape** — switch the example block between circle / capsule / rounded-rect.
+- **Theme / duration / band-width** — swap the color appearance and tune the shimmer.
+- **Loading** — toggle the whole subtree between shimmer and real content.
 
-Tap **Reload** in either tab to replay the loading → shimmer → real-content transition.
+The two tabs apply the panel idiomatically per framework:
+
+- **SwiftUI** — the panel state derives a `SkeletonConfiguration` injected through
+  `.skeletonAppearance(config)`; every `.skeleton(…)` in the subtree reacts live. The bio uses
+  `.skeleton(isLoading, textStyle: .footnote)` and draws one bar per wrapped line.
+- **UIKit** — the panel sets the global `Skeleton.appearance` and re-activates each slot
+  (`skeleton(false)` → `skeleton(true)`, honoring the activation-snapshot contract). The bio
+  `UILabel` renders one shimmer bar per text line.
+
+Each tab also has an **override** slot that keeps a fixed contrasting appearance no matter how the
+panel is set — SwiftUI via a nested `.skeletonAppearance(_:)`, UIKit via the per-call
+`skeleton(_:appearance:)` parameter.
 
 (The generated `ISkeletonDemo.xcodeproj` is committed, so the demo also opens without XcodeGen installed.)
 

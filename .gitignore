@@ -2,6 +2,7 @@
 .build/
 .swiftpm/
 DerivedData/
-*.xcodeproj/xcuserdata/
-*.xcodeproj/project.xcworkspace/xcuserdata/
-*.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+# Xcode 个人状态（任意层级，含 demo/ 下的工程）
+xcuserdata/
+*.xcuserstate
+**/xcshareddata/IDEWorkspaceChecks.plist

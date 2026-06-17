@@ -95,7 +95,7 @@ struct ProductCell: View {
 }
 ```
 
-Use `shape:` to control the placeholder outline and `lines:` to draw a multi-line text
+Use `shape:` to control the placeholder outline and `textStyle:` to draw a multi-line text
 placeholder:
 
 ```swift
@@ -103,12 +103,12 @@ placeholder:
 Circle().frame(width: 56, height: 56)
     .skeleton(isLoading, shape: .circle)
 
-// 多行文本：画 3 条带间隔的占位条
-Text(bio).skeleton(isLoading, lines: 3)
+// 多行文本：按 footprint 高度自动画占位条（条数随换行）
+Text(bio).skeleton(isLoading, textStyle: .footnote)
 ```
 
-`.skeleton(_ active: Bool, shape: SkeletonShape = ..., lines: Int = 1)` hides the real content,
-keeps its footprint, and overlays the shimmer. The `skeleton(_:shape:lines:)` signature replaces
+`.skeleton(_ active: Bool, shape: SkeletonShape = ..., textStyle: Font.TextStyle? = nil)` hides the real content,
+keeps its footprint, and overlays the shimmer. The `skeleton(_:shape:textStyle:)` signature replaces
 the old `cornerRadius:` parameter — pass `shape: .roundedRect(cornerRadius:)` for a custom corner
 radius, or `shape: .circle` for a circular placeholder. When the shape is left at its default the
 appearance's `cornerRadius` applies. `.skeletonAppearance(_:)` injects a `SkeletonConfiguration`
@@ -186,9 +186,9 @@ let config = SkeletonConfiguration(
 
 Multi-line text is the one place the two frameworks intentionally diverge:
 
-- **SwiftUI** uses an explicit `lines:` count: pass `lines: N` and the placeholder draws **N
-  spaced bars**. SwiftUI does not expose line-fragment introspection, so it cannot infer where
-  individual lines wrap — you tell it how many bars to draw, and each is laid out with a gap.
+- **SwiftUI** takes a `textStyle:` and derives the line count automatically: it divides the
+  hidden content's footprint height by that text style's line height, so the number of bars
+  matches how the real text actually wraps. Each bar is the height of a glyph body with a gap.
 - **UIKit** is **text-driven**: a multi-line `UILabel` draws **one bar per text line**
   automatically, because UIKit *does* expose per-line layout, so the placeholder mirrors the real
   wrap. Each bar is shrunk slightly to leave gaps between lines.
@@ -221,7 +221,7 @@ open ISkeletonDemo.xcodeproj
 
 Run it on an iOS simulator. Two tabs:
 
-- **SwiftUI** — each slot uses `.skeleton(isLoading)`; the multi-line bio renders as a single block overlay.
+- **SwiftUI** — each slot uses `.skeleton(isLoading)`; the multi-line bio uses `.skeleton(isLoading, textStyle: .footnote)` and draws one bar per wrapped line.
 - **UIKit** — each control uses `view.skeleton(true/false)`; the multi-line bio `UILabel` renders one shimmer bar per text line.
 
 Tap **Reload** in either tab to replay the loading → shimmer → real-content transition.

@@ -43,7 +43,7 @@ struct SwiftUIDemoView: View {
                 Text(p.price).font(.subheadline).foregroundStyle(.pink)
                     .skeleton(isLoading)
                 Text(p.bio).font(.footnote).foregroundStyle(.secondary)
-                    .skeleton(isLoading, lines: 3)
+                    .skeleton(isLoading, textStyle: .footnote)
             }
             Spacer(minLength: 0)
         }

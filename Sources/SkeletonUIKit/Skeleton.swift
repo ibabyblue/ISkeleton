@@ -20,7 +20,10 @@ public extension UIView {
     /// 契约：loading 前先给 host 设置代表性内容（UILabel 设代表性文案）撑出尺寸/行数，再 `skeleton(true)`；
     /// 骨架激活期间改文案，请先 `skeleton(false)` 再设文案后重新 `skeleton(true)`。
     /// 注：仅隐藏 UILabel 的 `textColor`；`attributedText` 中显式着色的富文本不在此机制内。
-    func skeleton(_ active: Bool, shape: SkeletonShape = .roundedRect(cornerRadius: nil)) {
+    /// `appearance` 非空时仅本次激活使用，否则用全局 `Skeleton.appearance`。
+    func skeleton(_ active: Bool,
+                  shape: SkeletonShape = .roundedRect(cornerRadius: nil),
+                  appearance: SkeletonConfiguration? = nil) {
         if active {
             if let existing = currentSkeletonOverlay, existing.superview === self {
                 return   // 幂等
@@ -30,7 +33,7 @@ public extension UIView {
                 stale.removeFromSuperview()
             }
             hideLabelTextIfNeeded()
-            let config = Skeleton.appearance
+            let config = appearance ?? Skeleton.appearance
             let overlay = SkeletonOverlayView(host: self, configuration: config, shape: shape)
             addSubview(overlay)
             overlay.setNeedsLayout()

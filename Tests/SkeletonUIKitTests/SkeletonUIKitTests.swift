@@ -212,4 +212,42 @@ final class SkeletonFidelityTests: XCTestCase {
         XCTAssertEqual(label.textColor, .systemBlue)
     }
 }
+
+final class SkeletonAppearanceOverrideTests: XCTestCase {
+
+    @MainActor
+    private func firstOverlay(_ v: UIView) -> SkeletonOverlayView? {
+        v.subviews.compactMap { $0 as? SkeletonOverlayView }.first
+    }
+
+    @MainActor
+    func test_perCallAppearance_overridesGlobal() {
+        defer { Skeleton.appearance = .default }
+        Skeleton.appearance = SkeletonConfiguration(
+            baseColor: SkeletonRGBA(r: 0.1, g: 0.1, b: 0.1),
+            highlightColor: SkeletonRGBA(r: 0.2, g: 0.2, b: 0.2))
+        let custom = SkeletonConfiguration(
+            baseColor: SkeletonRGBA(r: 0.9, g: 0.1, b: 0.1),
+            highlightColor: SkeletonRGBA(r: 0.95, g: 0.5, b: 0.5))
+
+        let v = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 20))
+        v.skeleton(true, appearance: custom)
+
+        XCTAssertEqual(firstOverlay(v)?.configuration.baseColor, custom.baseColor)
+    }
+
+    @MainActor
+    func test_noAppearance_usesGlobal() {
+        defer { Skeleton.appearance = .default }
+        let global = SkeletonConfiguration(
+            baseColor: SkeletonRGBA(r: 0.3, g: 0.4, b: 0.5),
+            highlightColor: SkeletonRGBA(r: 0.6, g: 0.7, b: 0.8))
+        Skeleton.appearance = global
+
+        let v = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 20))
+        v.skeleton(true)
+
+        XCTAssertEqual(firstOverlay(v)?.configuration.baseColor, global.baseColor)
+    }
+}
 #endif

@@ -38,6 +38,10 @@ final class SkeletonConfigurationTests: XCTestCase {
         XCTAssertEqual(c.duration, 2, accuracy: 1e-9)
         XCTAssertEqual(c.cornerRadius, 8, accuracy: 1e-9)
     }
+
+    func test_defaultDirection_isLeftToRight() {
+        XCTAssertEqual(SkeletonConfiguration.default.direction, .leftToRight)
+    }
 }
 
 final class ShimmerPhaseTests: XCTestCase {

@@ -13,17 +13,21 @@ public struct SkeletonConfiguration: Equatable, Sendable {
     public var bandWidth: CGFloat
     /// 占位条默认圆角。
     public var cornerRadius: CGFloat
+    /// 扫光方向。
+    public var direction: ShimmerDirection
 
     public init(baseColor: SkeletonRGBA,
                 highlightColor: SkeletonRGBA,
                 duration: TimeInterval = 1.4,
                 bandWidth: CGFloat = 0.6,
-                cornerRadius: CGFloat = 5) {
+                cornerRadius: CGFloat = 5,
+                direction: ShimmerDirection = .leftToRight) {
         self.baseColor = baseColor
         self.highlightColor = highlightColor
         self.duration = duration
         self.bandWidth = bandWidth
         self.cornerRadius = cornerRadius
+        self.direction = direction
     }
 
     /// 默认外观：中性灰底 + 偏白高光。

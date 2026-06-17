@@ -13,12 +13,14 @@
 		909D28891FE1007BFA2B4E25 /* UIKitDemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2453B4F6E2D573420B235F /* UIKitDemoViewController.swift */; };
 		B7D2A7AB9F77EC838E625A53 /* SwiftUIDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6F91242FD4CB057EC95941A /* SwiftUIDemoView.swift */; };
 		DE0CF2A712E290D6F086996A /* DemoProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA45E1160528288E5A8DA5A2 /* DemoProfile.swift */; };
+		E91F88C8383157DED3E50FFD /* DemoStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B551E98FE75D2B1832712EB /* DemoStyles.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		006BD4FC191B3C2C9F62E129 /* ISkeleton */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ISkeleton; path = ..; sourceTree = SOURCE_ROOT; };
+		1B551E98FE75D2B1832712EB /* DemoStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoStyles.swift; sourceTree = "<group>"; };
 		606A76EB44040D105A4D4AC4 /* ISkeletonDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISkeletonDemoApp.swift; sourceTree = "<group>"; };
-		8945EF2D8D03DFA43832B177 /* ISkeletonDemo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ISkeletonDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8945EF2D8D03DFA43832B177 /* ISkeletonDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ISkeletonDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F2453B4F6E2D573420B235F /* UIKitDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitDemoViewController.swift; sourceTree = "<group>"; };
 		B6F91242FD4CB057EC95941A /* SwiftUIDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIDemoView.swift; sourceTree = "<group>"; };
 		DA45E1160528288E5A8DA5A2 /* DemoProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoProfile.swift; sourceTree = "<group>"; };
@@ -50,6 +52,7 @@
 			isa = PBXGroup;
 			children = (
 				DA45E1160528288E5A8DA5A2 /* DemoProfile.swift */,
+				1B551E98FE75D2B1832712EB /* DemoStyles.swift */,
 				606A76EB44040D105A4D4AC4 /* ISkeletonDemoApp.swift */,
 				B6F91242FD4CB057EC95941A /* SwiftUIDemoView.swift */,
 				9F2453B4F6E2D573420B235F /* UIKitDemoViewController.swift */,
@@ -104,8 +107,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
-				TargetAttributes = {
-				};
 			};
 			buildConfigurationList = 02EBA8AA01D68794D9F62F24 /* Build configuration list for PBXProject "ISkeletonDemo" */;
 			developmentRegion = en;
@@ -135,6 +136,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DE0CF2A712E290D6F086996A /* DemoProfile.swift in Sources */,
+				E91F88C8383157DED3E50FFD /* DemoStyles.swift in Sources */,
 				53B50126CDA234626901CAB4 /* ISkeletonDemoApp.swift in Sources */,
 				B7D2A7AB9F77EC838E625A53 /* SwiftUIDemoView.swift in Sources */,
 				909D28891FE1007BFA2B4E25 /* UIKitDemoViewController.swift in Sources */,
@@ -150,6 +152,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2Z83ZPSLB9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -170,6 +173,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2Z83ZPSLB9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -247,7 +247,7 @@ let config = SkeletonConfiguration(
 // UIKit:   Skeleton.appearance = config
 ```
 
-`direction` controls the shimmer sweep — `.leftToRight` (default), the four edges
+`direction` controls the shimmer sweep — `.leftToRight` (default), the other three edges
 (`.rightToLeft`, `.topToBottom`, `.bottomToTop`), or the four diagonals such as
 `.topRightToBottomLeft` (top-right → bottom-left):
 

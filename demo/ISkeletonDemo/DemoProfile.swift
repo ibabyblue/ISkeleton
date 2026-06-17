@@ -22,7 +22,7 @@ extension DemoProfile {
     /// loading 时撑出尺寸/行数的代表性占位内容。
     static let placeholderName = "占位昵称占位"
     static let placeholderPrice = "￥00.00"
-    static let placeholderBio = String(repeating: "占位文本占位文本", count: 6)
+    static let placeholderBio = String(repeating: "占位文本占位文本", count: 4)
 
     /// loading 态展示的占位卡（id 稳定，避免 SwiftUI ForEach 身份抖动）。
     static let placeholderCards: [DemoProfile] = (0..<3).map { _ in

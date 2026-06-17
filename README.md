@@ -229,6 +229,7 @@ out of scope.
 | `duration` | `TimeInterval` | `1.4` | One full sweep, in seconds |
 | `bandWidth` | `CGFloat` | `0.6` | Highlight band width, normalized to the slot |
 | `cornerRadius` | `CGFloat` | `5` | Default placeholder corner radius |
+| `direction` | `ShimmerDirection` | `.leftToRight` | Shimmer sweep direction (8 presets, incl. diagonals) |
 
 Colors are platform-neutral: `SkeletonRGBA(r:g:b:a:)` with each component in `0...1` (`a`
 defaults to `1`). Build a custom appearance like so:
@@ -244,6 +245,15 @@ let config = SkeletonConfiguration(
 
 // SwiftUI: .skeletonAppearance(config)
 // UIKit:   Skeleton.appearance = config
+```
+
+`direction` controls the shimmer sweep — `.leftToRight` (default), the four edges
+(`.rightToLeft`, `.topToBottom`, `.bottomToTop`), or the four diagonals such as
+`.topRightToBottomLeft` (top-right → bottom-left):
+
+```swift
+var config = SkeletonConfiguration.default
+config.direction = .topRightToBottomLeft   // 斜向扫光：右上 → 左下
 ```
 
 ## Platform Differences

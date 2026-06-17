@@ -189,16 +189,30 @@ func configure(with profile: Profile?) {
 }
 ```
 
+Per-view override — pass `appearance:` to use a custom appearance for just this activation, while
+everything else keeps the global default:
+
+```swift
+let promo = SkeletonConfiguration(
+    baseColor:      SkeletonRGBA(r: 0.96, g: 0.86, b: 0.86, a: 0.9),
+    highlightColor: SkeletonRGBA(r: 1.0,  g: 0.95, b: 0.95, a: 0.9))
+
+bioLabel.skeleton(true, appearance: promo)   // 这个视图用 promo 外观
+priceLabel.skeleton(true)                    // 其它仍用全局 Skeleton.appearance
+```
+
 **Contract — set text first, toggle to change text:** `skeleton(true)` snapshots the host's
 size and line count at the moment you activate it. So always set representative text *before*
 calling `skeleton(true)`. To change the text while a skeleton is already active, deactivate
 first: `skeleton(false)` → set the new text → `skeleton(true)`. (Reactivating with the same
 state is idempotent and safe.)
 
-`skeleton(_ active: Bool, shape: SkeletonShape = ...)` overlays the shimmer on the view's own
-`bounds` without affecting its intrinsic size; the default shape falls back to
-`Skeleton.appearance.cornerRadius`, while `shape: .circle` clips to a circle. For a multi-line
-`UILabel`, the placeholder draws one bar per text line.
+`skeleton(_ active: Bool, shape: SkeletonShape = ..., appearance: SkeletonConfiguration? = nil)`
+overlays the shimmer on the view's own `bounds` without affecting its intrinsic size. `appearance`
+overrides `Skeleton.appearance` for that activation only (omit it to use the global default); the
+default shape falls back to the resolved appearance's `cornerRadius`, while `shape: .circle` clips
+to a circle. For a multi-line `UILabel`, the placeholder draws one bar per text line. Set
+`Skeleton.appearance` on the main thread.
 
 UIKit hides a `UILabel`'s text while the skeleton is active and restores it on deactivate, so the
 placeholder text never shows through under the shimmer. `attributedText` with explicit colors is

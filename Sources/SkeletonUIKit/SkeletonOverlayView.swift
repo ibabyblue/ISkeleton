@@ -10,6 +10,8 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
 
     let configuration: SkeletonConfiguration
     private let shape: SkeletonShape
+    /// 非空 → 走图片蒙版分支（底色与高光填满 bounds，由 image alpha 统一裁形）。
+    private let maskImage: CGImage?
     /// 逐行条相对行高的高度比例（留出行间隔）。
     private let lineFillRatio: CGFloat = 0.62
     /// 弱引用 host，用于读取 UILabel 的文案排版信息。
@@ -19,10 +21,12 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
     private let shimmerLayer = CAGradientLayer()
     private var lastBuiltSize: CGSize = .zero
 
-    init(host: UIView, configuration: SkeletonConfiguration, shape: SkeletonShape) {
+    init(host: UIView, configuration: SkeletonConfiguration, shape: SkeletonShape,
+         maskImage: CGImage? = nil) {
         self.host = host
         self.configuration = configuration
         self.shape = shape
+        self.maskImage = maskImage
         super.init(frame: host.bounds)
         isUserInteractionEnabled = false
         autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -48,6 +52,7 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
     var builtBarCountForTesting: Int { barsLayer.sublayers?.count ?? 0 }
     var builtBarFramesForTesting: [CGRect] { (barsLayer.sublayers ?? []).map { $0.frame } }
     var builtBarRadiiForTesting: [CGFloat] { (barsLayer.sublayers ?? []).map { $0.cornerRadius } }
+    var isImageMaskedForTesting: Bool { layer.mask != nil }
 
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -57,6 +62,10 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
     }
 
     private func rebuildBars() {
+        if let maskImage {
+            rebuildImageMasked(maskImage)
+            return
+        }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         barsLayer.frame = bounds
@@ -80,6 +89,29 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         }
         shimmerLayer.frame = bounds
         shimmerLayer.mask = maskContainer
+        CATransaction.commit()
+    }
+
+    /// 图片蒙版：底色填满 bounds + 高光填满 bounds，再用 image alpha 裁出 logo 轮廓。
+    private func rebuildImageMasked(_ image: CGImage) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        barsLayer.frame = bounds
+        barsLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
+
+        let fill = CALayer()
+        fill.frame = bounds
+        fill.backgroundColor = configuration.baseColor.uiColor.cgColor
+        barsLayer.addSublayer(fill)
+
+        shimmerLayer.frame = bounds
+        shimmerLayer.mask = nil   // 高光覆盖全 bounds，由外层 image mask 统一裁形
+
+        let m = CALayer()
+        m.frame = bounds
+        m.contents = image
+        m.contentsGravity = .resizeAspect
+        layer.mask = m
         CATransaction.commit()
     }
 

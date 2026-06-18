@@ -250,4 +250,48 @@ final class SkeletonAppearanceOverrideTests: XCTestCase {
         XCTAssertEqual(firstOverlay(v)?.configuration, global)
     }
 }
+
+final class SkeletonMaskTests: XCTestCase {
+
+    /// 1×1 不透明位图，保证有 cgImage。
+    private func bitmap() -> UIImage {
+        UIGraphicsImageRenderer(size: CGSize(width: 4, height: 4)).image { ctx in
+            UIColor.black.setFill()
+            ctx.fill(CGRect(x: 0, y: 0, width: 4, height: 4))
+        }
+    }
+
+    @MainActor
+    func test_imageMask_addsMaskedOverlay() {
+        let v = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 40))
+        v.skeleton(true, mask: .image(bitmap()))
+        let overlay = v.subviews.compactMap { $0 as? SkeletonOverlayView }.first
+        XCTAssertNotNil(overlay)
+        XCTAssertTrue(overlay?.isImageMaskedForTesting ?? false)
+    }
+
+    @MainActor
+    func test_ownImage_onImageView_activates() {
+        let iv = UIImageView(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
+        iv.image = bitmap()
+        iv.skeleton(true, mask: .ownImage)
+        XCTAssertTrue(iv.subviews.contains { $0 is SkeletonOverlayView })
+    }
+
+    @MainActor
+    func test_ownImage_onNonImageView_degradesToNoOp() {
+        let v = UIView(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
+        v.skeleton(true, mask: .ownImage)   // 非 UIImageView：无图可用
+        XCTAssertFalse(v.subviews.contains { $0 is SkeletonOverlayView })
+    }
+
+    @MainActor
+    func test_deactivate_removesOverlay() {
+        let iv = UIImageView(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
+        iv.image = bitmap()
+        iv.skeleton(true, mask: .ownImage)
+        iv.skeleton(false, mask: .ownImage)
+        XCTAssertFalse(iv.subviews.contains { $0 is SkeletonOverlayView })
+    }
+}
 #endif

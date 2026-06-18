@@ -1,5 +1,6 @@
 import UIKit
 import SwiftUI
+import AVFoundation
 import SkeletonUIKit
 
 /// 把 UIKit 演示 VC 包进 SwiftUI 的 TabView。
@@ -38,6 +39,19 @@ final class UIKitDemoViewController: UIViewController {
     private let priceLabel = UILabel()
     private let bioLabel = UILabel()
     private let overrideLabel = UILabel()
+    private let logoView = UIImageView()
+
+    /// 把 SF Symbol 栅格化成带 alpha 的位图（symbol 自身 cgImage 常为 nil）。
+    private func rasterizedLogo() -> UIImage {
+        let cfg = UIImage.SymbolConfiguration(pointSize: 64, weight: .bold)
+        let symbol = UIImage(systemName: "swift", withConfiguration: cfg)!
+            .withTintColor(.label, renderingMode: .alwaysOriginal)
+        let size = CGSize(width: 80, height: 80)
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            let r = AVMakeRect(aspectRatio: symbol.size, insideRect: CGRect(origin: .zero, size: size))
+            symbol.draw(in: r)
+        }
+    }
 
     /// per-call 覆盖固定外观（不随面板变）。
     private let overrideConfig = SkeletonConfiguration(
@@ -69,7 +83,7 @@ final class UIKitDemoViewController: UIViewController {
         view.addSubview(scroll)
 
         let root = UIStackView(arrangedSubviews: [
-            controlPanel(), shapeSection(), profileCard(), overrideCard(),
+            controlPanel(), shapeSection(), logoSection(), profileCard(), overrideCard(),
         ])
         root.axis = .vertical
         root.spacing = 20
@@ -109,6 +123,23 @@ final class UIKitDemoViewController: UIViewController {
         shapeBoxWidth = shapeBox.widthAnchor.constraint(equalToConstant: 64)
         NSLayoutConstraint.activate([shapeBoxWidth, shapeBox.heightAnchor.constraint(equalToConstant: 64)])
         let row = UIStackView(arrangedSubviews: [shapeBox, UIView()])
+        row.axis = .horizontal
+        let stack = UIStackView(arrangedSubviews: [title, row])
+        stack.axis = .vertical
+        stack.spacing = 8
+        return stack
+    }
+
+    private func logoSection() -> UIView {
+        let title = sectionTitle("加载 logo（图片蒙版）")
+        logoView.image = rasterizedLogo()
+        logoView.contentMode = .scaleAspectFit
+        logoView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            logoView.widthAnchor.constraint(equalToConstant: 80),
+            logoView.heightAnchor.constraint(equalToConstant: 80),
+        ])
+        let row = UIStackView(arrangedSubviews: [logoView, UIView()])
         row.axis = .horizontal
         let stack = UIStackView(arrangedSubviews: [title, row])
         stack.axis = .vertical
@@ -218,8 +249,14 @@ final class UIKitDemoViewController: UIViewController {
         rebuild(nameLabel)
         rebuild(priceLabel)
         rebuild(bioLabel)
+        rebuildLogo()
         // per-call 覆盖：固定 overrideConfig，不受面板影响。
         rebuild(overrideLabel, appearance: overrideConfig)
+    }
+
+    private func rebuildLogo() {
+        logoView.skeleton(false, mask: .ownImage)
+        if isLoading { logoView.skeleton(true, mask: .ownImage) }
     }
 
     private func rebuild(_ v: UIView,

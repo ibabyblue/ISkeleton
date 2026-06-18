@@ -10,6 +10,12 @@ public extension View {
                   textStyle: Font.TextStyle? = nil) -> some View {
         modifier(SkeletonModifier(active: active, shape: shape, textStyle: textStyle))
     }
+
+    /// active 时：隐藏内容，叠加 baseColor + 同相位高光，并用 image 的 alpha 作蒙版裁出轮廓。
+    /// false 时：原样显示内容（如全彩 logo）。
+    func skeleton(_ active: Bool, mask image: Image) -> some View {
+        modifier(MaskedSkeletonModifier(active: active, maskImage: image))
+    }
 }
 
 private struct SkeletonModifier: ViewModifier {
@@ -31,6 +37,38 @@ private struct SkeletonModifier: ViewModifier {
         } else {
             content
         }
+    }
+}
+
+private struct MaskedSkeletonModifier: ViewModifier {
+    let active: Bool
+    let maskImage: Image
+    @Environment(\.skeletonAppearance) private var config
+
+    func body(content: Content) -> some View {
+        if active {
+            content.hidden().overlay {
+                TimelineView(.animation) { ctx in
+                    let phase = ShimmerPhase.phase(
+                        at: ctx.date.timeIntervalSinceReferenceDate,
+                        duration: config.duration, bandWidth: config.bandWidth)
+                    shimmerFill(config: config, phase: phase)
+                        .mask(maskImage.resizable())
+                }
+            }
+        } else {
+            content
+        }
+    }
+}
+
+/// baseColor 填充 + 沿 direction 平移的高光带（几何/蒙版两条路径共用）。
+func shimmerFill(config: SkeletonConfiguration, phase: CGFloat) -> some View {
+    let pts = config.direction.gradientPoints(phase: phase, bandWidth: config.bandWidth)
+    return config.baseColor.color.overlay {
+        LinearGradient(colors: [.clear, config.highlightColor.color, .clear],
+                       startPoint: UnitPoint(x: pts.start.x, y: pts.start.y),
+                       endPoint: UnitPoint(x: pts.end.x, y: pts.end.y))
     }
 }
 
@@ -61,12 +99,7 @@ private struct ShimmerSingle: View {
     }
 
     private func fill(phase: CGFloat) -> some View {
-        let pts = config.direction.gradientPoints(phase: phase, bandWidth: config.bandWidth)
-        return config.baseColor.color.overlay {
-            LinearGradient(colors: [.clear, config.highlightColor.color, .clear],
-                           startPoint: UnitPoint(x: pts.start.x, y: pts.start.y),
-                           endPoint: UnitPoint(x: pts.end.x, y: pts.end.y))
-        }
+        shimmerFill(config: config, phase: phase)
     }
 }
 

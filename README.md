@@ -256,6 +256,27 @@ var config = SkeletonConfiguration.default
 config.direction = .topRightToBottomLeft   // 斜向扫光：右上 → 左下
 ```
 
+## Image-masked skeleton (logo silhouette)
+
+Render a transparent logo as a skeleton in its own alpha silhouette — same fill, highlight, and
+in-phase sweep as every other skeleton, but clipped to the image instead of a geometric shape.
+
+```swift
+// SwiftUI — pass the logo image as the mask
+Image("logo").resizable().scaledToFit().frame(width: 160, height: 48)
+    .skeleton(isLoading, mask: Image("logo"))
+
+// UIKit — a UIImageView can mask with its own image
+logoImageView.skeleton(true,  mask: .ownImage)   // loading: logo-shaped shimmer
+logoImageView.skeleton(false, mask: .ownImage)   // done: real logo restored
+```
+
+The silhouette comes from the image's **alpha**, so use a transparent-background logo; an opaque
+rectangular image degrades to a plain rectangular skeleton. On UIKit the mask image must be
+bitmap-backed (have a `cgImage`) — rasterize vector assets (SF Symbols, PDFs) first; a vector image
+with no `cgImage` safely degrades to no skeleton. `SkeletonMask` is `.image(UIImage)` or `.ownImage`
+(UIImageView only).
+
 ## Platform Differences
 
 Multi-line text is the one place the two frameworks intentionally diverge:

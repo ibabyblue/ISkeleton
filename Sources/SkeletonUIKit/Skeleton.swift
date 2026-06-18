@@ -43,13 +43,51 @@ public extension UIView {
             ShimmerClock.shared.register(overlay)
             currentSkeletonOverlay = overlay
         } else {
-            // 先无条件还原文字（自守卫于 savedTextColor），使恢复不依赖 overlay 状态。
-            restoreLabelTextIfNeeded()
-            guard let overlay = currentSkeletonOverlay else { return }
-            ShimmerClock.shared.unregister(overlay)
-            overlay.removeFromSuperview()
-            currentSkeletonOverlay = nil
+            tearDownSkeleton()
         }
+    }
+
+    /// active 时叠加 baseColor + 同相位高光，用图片 alpha 裁出 logo 轮廓；false 移除还原。
+    /// `.ownImage` 仅对 `UIImageView` 有效；无可用图（或图无 cgImage）则不激活（安全降级）。
+    /// 同一 view 上 `skeleton(_:shape:)` 与 `skeleton(_:mask:)` 互斥：两者共用同一 overlay，
+    /// 切换前须先 `skeleton(false)`，否则已激活的 overlay 会因幂等守卫被保留、新请求被忽略。
+    @MainActor
+    func skeleton(_ active: Bool, mask: SkeletonMask,
+                  appearance: SkeletonConfiguration? = nil) {
+        if active {
+            guard let cg = resolveMaskCGImage(mask) else { return }
+            if let existing = currentSkeletonOverlay, existing.superview === self { return }
+            if let stale = currentSkeletonOverlay {
+                ShimmerClock.shared.unregister(stale)
+                stale.removeFromSuperview()
+            }
+            let config = appearance ?? Skeleton.appearance
+            let overlay = SkeletonOverlayView(host: self, configuration: config,
+                                              shape: .roundedRect(cornerRadius: nil), maskImage: cg)
+            addSubview(overlay)
+            overlay.setNeedsLayout()
+            overlay.layoutIfNeeded()
+            ShimmerClock.shared.register(overlay)
+            currentSkeletonOverlay = overlay
+        } else {
+            tearDownSkeleton()
+        }
+    }
+
+    private func resolveMaskCGImage(_ mask: SkeletonMask) -> CGImage? {
+        switch mask {
+        case .image(let img): return img.cgImage
+        case .ownImage:       return (self as? UIImageView)?.image?.cgImage
+        }
+    }
+
+    private func tearDownSkeleton() {
+        // 先无条件还原文字（自守卫于 savedTextColor），使恢复不依赖 overlay 状态。
+        restoreLabelTextIfNeeded()
+        guard let overlay = currentSkeletonOverlay else { return }
+        ShimmerClock.shared.unregister(overlay)
+        overlay.removeFromSuperview()
+        currentSkeletonOverlay = nil
     }
 
     /// 暂存并清空 UILabel 文字颜色（骨架期不可见真实文字）。

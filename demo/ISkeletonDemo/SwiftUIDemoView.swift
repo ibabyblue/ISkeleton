@@ -36,6 +36,7 @@ struct SwiftUIDemoView: View {
                 VStack(spacing: 20) {
                     controlPanel
                     shapeExample
+                    logoExample
                     profileCard
                     overrideCard
                 }
@@ -98,6 +99,19 @@ struct SwiftUIDemoView: View {
                 .skeleton(isLoading, shape: shape.skeletonShape)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// 中央加载 logo：用 SF Symbol 的 alpha 作骨架剪影，与面板同相位。
+    private var logoExample: some View {
+        VStack(spacing: 8) {
+            Text("加载 logo（图片蒙版）").font(.headline)
+            Image(systemName: "swift")
+                .resizable().scaledToFit()
+                .frame(width: 80, height: 80)
+                .foregroundStyle(.orange)
+                .skeleton(isLoading, mask: Image(systemName: "swift"))
+        }
+        .frame(maxWidth: .infinity)
     }
 
     /// 资料卡：圆头像 + 单行 name/price + 多行 bio（textStyle 自动算行数）。

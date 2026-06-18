@@ -49,6 +49,8 @@ public extension UIView {
 
     /// active 时叠加 baseColor + 同相位高光，用图片 alpha 裁出 logo 轮廓；false 移除还原。
     /// `.ownImage` 仅对 `UIImageView` 有效；无可用图（或图无 cgImage）则不激活（安全降级）。
+    /// 同一 view 上 `skeleton(_:shape:)` 与 `skeleton(_:mask:)` 互斥：两者共用同一 overlay，
+    /// 切换前须先 `skeleton(false)`，否则已激活的 overlay 会因幂等守卫被保留、新请求被忽略。
     @MainActor
     func skeleton(_ active: Bool, mask: SkeletonMask,
                   appearance: SkeletonConfiguration? = nil) {

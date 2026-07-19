@@ -1,11 +1,11 @@
 #if canImport(UIKit)
 import UIKit
 
-/// 图片蒙版来源：骨架轮廓取自图片 alpha。
+/// A UIKit image source whose alpha channel defines a skeleton silhouette.
 public enum SkeletonMask {
-    /// 指定蒙版图。
+    /// Uses the supplied image when it provides a bitmap-backed `CGImage`.
     case image(UIImage)
-    /// 用 `UIImageView` 自身的 `image`（仅对 UIImageView 有效）。
+    /// Uses the receiver's image when the skeleton host is a `UIImageView`.
     case ownImage
 }
 #endif

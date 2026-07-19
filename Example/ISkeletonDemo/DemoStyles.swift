@@ -1,10 +1,13 @@
 import SkeletonCore
 
-/// demo 颜色主题预设；演示「换一套 baseColor/highlightColor 外观」。三者肉眼可区分。
+/// Visually distinct color presets used to exercise appearance changes.
 enum DemoColorTheme: String, CaseIterable, Identifiable {
+    /// The package default, a dark neutral palette, and a tinted palette.
     case `default`, dark, tinted
+    /// The raw-value identity consumed by SwiftUI pickers.
     var id: String { rawValue }
 
+    /// The localized title displayed by the Example control panel.
     var title: String {
         switch self {
         case .default: return "默认"
@@ -13,7 +16,7 @@ enum DemoColorTheme: String, CaseIterable, Identifiable {
         }
     }
 
-    /// 占位条底色。
+    /// The base skeleton color for this preset.
     var base: SkeletonRGBA {
         switch self {
         case .default: return SkeletonRGBA(r: 0.91, g: 0.85, b: 0.85, a: 0.8)
@@ -22,7 +25,7 @@ enum DemoColorTheme: String, CaseIterable, Identifiable {
         }
     }
 
-    /// 扫光高光色。
+    /// The highlight-band color for this preset.
     var highlight: SkeletonRGBA {
         switch self {
         case .default: return SkeletonRGBA(r: 0.99, g: 0.98, b: 0.98, a: 0.8)
@@ -32,7 +35,10 @@ enum DemoColorTheme: String, CaseIterable, Identifiable {
     }
 }
 
-/// 扫光方向的展示名（覆盖 ShimmerDirection.allCases 全部 8 项）。
+/// Returns the localized control-panel title for every shimmer direction.
+///
+/// - Parameter d: The direction whose title is required.
+/// - Returns: A title containing the direction's visual arrow.
 func demoDirectionTitle(_ d: ShimmerDirection) -> String {
     switch d {
     case .leftToRight:          return "左 → 右"
@@ -46,11 +52,14 @@ func demoDirectionTitle(_ d: ShimmerDirection) -> String {
     }
 }
 
-/// demo 本地形状枚举：SkeletonShape 带关联值不便做 Picker/分段，这里用可枚举的简单 case 映射过去。
+/// A picker-friendly Example shape that maps to the package's associated-value shape.
 enum DemoShape: String, CaseIterable, Identifiable {
+    /// The circle, capsule, and rounded-rectangle choices shown in both labs.
     case circle, capsule, roundedRect
+    /// The raw-value identity consumed by SwiftUI pickers.
     var id: String { rawValue }
 
+    /// The localized title displayed by the Example control panel.
     var title: String {
         switch self {
         case .circle:      return "圆形"
@@ -59,7 +68,9 @@ enum DemoShape: String, CaseIterable, Identifiable {
         }
     }
 
-    /// roundedRect 传 nil → 用 config.cornerRadius。
+    /// The package shape represented by this picker value.
+    ///
+    /// Rounded rectangles use a `nil` radius so the active configuration supplies it.
     var skeletonShape: SkeletonShape {
         switch self {
         case .circle:      return .circle

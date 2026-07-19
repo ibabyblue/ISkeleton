@@ -1,18 +1,28 @@
 #if canImport(UIKit)
 import UIKit
 
-/// 用 TextKit 把一段富文本按给定宽度排版，返回每行的 used rect（供逐行占位条使用）。
-/// 行数/末行宽度完全由文案决定 —— 不写死任何布局约束。
+/// Uses TextKit to calculate the content-driven line fragments of a UIKit label.
 enum SkeletonLineLayout {
+    /// Lays out attributed text and returns the used rectangle for each visible line.
+    ///
+    /// Truncating modes normalize to word wrapping for unlimited-line labels because
+    /// applying a truncating mode directly would collapse TextKit output to one line.
+    ///
+    /// - Parameters:
+    ///   - attributedText: The text and font attributes to lay out.
+    ///   - width: The available label width, in points.
+    ///   - numberOfLines: The label line limit. `0` means unlimited lines.
+    ///   - lineBreakMode: The label's requested wrapping or truncation behavior.
+    /// - Returns: Used line rectangles in layout order, or an empty array for empty text or nonpositive width.
     static func lineRects(for attributedText: NSAttributedString,
                           width: CGFloat,
                           numberOfLines: Int,
                           lineBreakMode: NSLineBreakMode) -> [CGRect] {
         guard attributedText.length > 0, width > 0 else { return [] }
 
-        // 复刻 UILabel：numberOfLines == 0 表示无限行 → 整体按 word wrapping 折行；
-        // 截断类的 lineBreakMode（.byTruncatingHead/Middle/Tail）只在有行数上限时对末行生效，
-        // 直接喂给 TextKit 会把文本压成单行，故此处归一到 .byWordWrapping。
+        // Match UILabel: zero lines means unlimited word wrapping. Truncating modes
+        // affect only a limited final line; passing one directly would collapse TextKit
+        // output to one line, so unlimited labels normalize to word wrapping.
         let effectiveBreakMode: NSLineBreakMode
         switch lineBreakMode {
         case .byTruncatingHead, .byTruncatingMiddle, .byTruncatingTail:
@@ -21,8 +31,9 @@ enum SkeletonLineLayout {
             effectiveBreakMode = lineBreakMode
         }
 
-        // UILabel 合成的 attributedText 会带上 paragraphStyle，其内嵌的 lineBreakMode（默认 .byTruncatingTail）
-        // 优先级高于 container.lineBreakMode，会把多行文本压成单行。这里覆写段落样式的折行模式以使容器折行生效。
+        // UILabel-generated attributed text embeds a paragraph line-break mode that
+        // overrides its text container. Normalize that paragraph style so multiline
+        // wrapping follows the container configuration.
         let normalized = NSMutableAttributedString(attributedString: attributedText)
         let fullRange = NSRange(location: 0, length: normalized.length)
         normalized.enumerateAttribute(.paragraphStyle, in: fullRange, options: []) { value, range, _ in

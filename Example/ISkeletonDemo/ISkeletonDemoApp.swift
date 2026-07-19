@@ -1,13 +1,16 @@
 import SwiftUI
-import SkeletonUIKit   // 同时验证 Skeleton-UIKit product 链接成功
+import SkeletonUIKit   // Also verifies that the Skeleton-UIKit product links successfully.
 
+/// Launches the two-tab SwiftUI and UIKit integration Example.
 @main
 struct ISkeletonDemoApp: App {
+    /// Configures the UIKit product's process-wide default appearance at launch.
     init() {
-        // 设置全局骨架外观（顺带验证 SkeletonUIKit 链接）。
+        // Set the global appearance while exercising the linked UIKit module.
         Skeleton.appearance = .default
     }
 
+    /// The scene containing both supported framework labs.
     var body: some Scene {
         WindowGroup {
             TabView {

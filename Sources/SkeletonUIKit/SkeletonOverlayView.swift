@@ -2,25 +2,42 @@
 import UIKit
 import SkeletonCore
 
-/// 覆盖在 host 上的扫光占位层。不参与 host 的 intrinsic size；尺寸跟随 host bounds。
+/// Displays skeleton bars or an image-masked shimmer without affecting host layout.
 final class SkeletonOverlayView: UIView, ShimmerDriven {
 
-    /// 单个占位条的几何：矩形 + 圆角。
-    private struct Bar { let rect: CGRect; let radius: CGFloat }
+    /// The frame and corner radius of one placeholder bar.
+    private struct Bar {
+        /// The bar frame in overlay coordinates.
+        let rect: CGRect;
+        /// The corner radius applied to the bar and its shimmer mask.
+        let radius: CGFloat
+    }
 
+    /// The immutable configuration snapshotted when the overlay is created.
     let configuration: SkeletonConfiguration
+    /// The geometric shape used when the host does not produce multiline label bars.
     private let shape: SkeletonShape
-    /// 非空 → 走图片蒙版分支（底色与高光填满 bounds，由 image alpha 统一裁形）。
+    /// The optional image that clips the entire base and highlight fill by alpha.
     private let maskImage: CGImage?
-    /// 逐行条相对行高的高度比例（留出行间隔）。
+    /// The portion of a UIKit line fragment occupied by its visible bar.
     private let lineFillRatio: CGFloat = 0.62
-    /// 弱引用 host，用于读取 UILabel 的文案排版信息。
+    /// The weak host used to inspect label text layout without creating a view cycle.
     private weak var host: UIView?
 
+    /// Contains the base-color layers for geometric bars or an image fill.
     private let barsLayer = CALayer()
+    /// Draws the moving highlight and is clipped to current placeholder geometry.
     private let shimmerLayer = CAGradientLayer()
+    /// The last nonempty bounds size used to build layer geometry.
     private var lastBuiltSize: CGSize = .zero
 
+    /// Creates an overlay that follows a host's bounds and snapshots one configuration.
+    ///
+    /// - Parameters:
+    ///   - host: The view whose bounds and optional label layout define the placeholder.
+    ///   - configuration: The immutable appearance and motion values for this activation.
+    ///   - shape: The fallback geometric shape for non-label hosts.
+    ///   - maskImage: An optional bitmap alpha mask. The default is `nil`.
     init(host: UIView, configuration: SkeletonConfiguration, shape: SkeletonShape,
          maskImage: CGImage? = nil) {
         self.host = host
@@ -43,17 +60,25 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         layer.addSublayer(shimmerLayer)
     }
 
+    /// Storyboard and archive construction are unavailable for programmatic overlays.
+    ///
+    /// - Parameter coder: The decoder supplied by UIKit.
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
+    /// The configuration used by the shared shimmer clock for phase calculation.
     var shimmerConfiguration: SkeletonConfiguration { configuration }
 
-    /// 测试用：当前占位条数量 / frame / 圆角。
+    /// The number of currently built base bars, exposed for tests.
     var builtBarCountForTesting: Int { barsLayer.sublayers?.count ?? 0 }
+    /// The frames of currently built base bars, exposed for tests.
     var builtBarFramesForTesting: [CGRect] { (barsLayer.sublayers ?? []).map { $0.frame } }
+    /// The corner radii of currently built base bars, exposed for tests.
     var builtBarRadiiForTesting: [CGFloat] { (barsLayer.sublayers ?? []).map { $0.cornerRadius } }
+    /// Whether an image mask currently clips the overlay, exposed for tests.
     var isImageMaskedForTesting: Bool { layer.mask != nil }
 
+    /// Rebuilds placeholder layers when the overlay receives a new nonempty size.
     override func layoutSubviews() {
         super.layoutSubviews()
         guard bounds.size != lastBuiltSize, !bounds.isEmpty else { return }
@@ -61,6 +86,7 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         rebuildBars()
     }
 
+    /// Recreates geometric bars or delegates to image-mask layer construction.
     private func rebuildBars() {
         if let maskImage {
             rebuildImageMasked(maskImage)
@@ -92,7 +118,9 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         CATransaction.commit()
     }
 
-    /// 图片蒙版：底色填满 bounds + 高光填满 bounds，再用 image alpha 裁出 logo 轮廓。
+    /// Fills the bounds and clips the combined base and highlight through image alpha.
+    ///
+    /// - Parameter image: The bitmap assigned to the overlay layer mask.
     private func rebuildImageMasked(_ image: CGImage) {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -105,7 +133,7 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         barsLayer.addSublayer(fill)
 
         shimmerLayer.frame = bounds
-        shimmerLayer.mask = nil   // 高光覆盖全 bounds，由外层 image mask 统一裁形
+        shimmerLayer.mask = nil   // Fill all bounds; the outer image mask performs final clipping.
 
         let m = CALayer()
         m.frame = bounds
@@ -115,7 +143,12 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         CATransaction.commit()
     }
 
-    /// UILabel → 逐行（每条按行高收缩、垂直居中，留出间隔）；其它 → 单条覆盖 bounds（用 shape 圆角）。
+    /// Calculates text-driven label bars or one bounds-filling geometric bar.
+    ///
+    /// Label bars are vertically centered within each line fragment and reduced by
+    /// `lineFillRatio`. Empty or unavailable label layout falls back to one shape bar.
+    ///
+    /// - Returns: The bar geometry used to build fill and shimmer-mask layers.
     private func barSpecs() -> [Bar] {
         if let label = host as? UILabel, let text = labelText(label) {
             let lineRects = SkeletonLineLayout.lineRects(
@@ -134,12 +167,19 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         return [Bar(rect: bounds, radius: radius)]
     }
 
+    /// Resolves a label's attributed or plain text with the font required by TextKit.
+    ///
+    /// - Parameter label: The label whose current content defines line geometry.
+    /// - Returns: Attributed text suitable for layout, or `nil` when the label has no text.
     private func labelText(_ label: UILabel) -> NSAttributedString? {
         if let attr = label.attributedText { return attr }
         if let t = label.text { return NSAttributedString(string: t, attributes: [.font: label.font as Any]) }
         return nil
     }
 
+    /// Updates the gradient endpoints for one shared-clock frame without implicit animation.
+    ///
+    /// - Parameter phase: The normalized position of the highlight band's leading edge.
     func applyShimmerPhase(_ phase: CGFloat) {
         let pts = configuration.direction.gradientPoints(phase: phase, bandWidth: configuration.bandWidth)
         CATransaction.begin()

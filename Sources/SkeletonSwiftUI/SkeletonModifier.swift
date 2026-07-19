@@ -1,29 +1,50 @@
 import SwiftUI
 import SkeletonCore
 
+/// Adds geometric and image-masked skeleton overlays to SwiftUI views.
 public extension View {
-    /// active 时：隐藏真实内容但保留 footprint，叠加骨架占位；false 时原样显示。
-    /// - shape: 图形占位形状（textStyle == nil 时生效，用于头像等）。
-    /// - textStyle: 传入则按文本骨架渲染 —— 用该 TextStyle 的单行高度除 footprint 高度自动算行数（忽略 shape）。
+    /// Replaces a view's visible content with an in-place skeleton while active.
+    ///
+    /// - Parameters:
+    ///   - active: `true` to hide content while retaining its footprint and draw a skeleton.
+    ///   - shape: The geometric placeholder shape used when `textStyle` is `nil`.
+    ///   - textStyle: A text style used to derive multiline bar geometry. When non-`nil`, it overrides `shape`.
+    /// - Returns: A view that conditionally renders the skeleton overlay.
     func skeleton(_ active: Bool,
                   shape: SkeletonShape = .roundedRect(cornerRadius: nil),
                   textStyle: Font.TextStyle? = nil) -> some View {
         modifier(SkeletonModifier(active: active, shape: shape, textStyle: textStyle))
     }
 
-    /// active 时：隐藏内容，叠加 baseColor + 同相位高光，并用 image 的 alpha 作蒙版裁出轮廓。
-    /// false 时：原样显示内容（如全彩 logo）。
+    /// Replaces a view's content with a shimmer clipped by an image's alpha channel.
+    ///
+    /// The real content remains in layout but is hidden while active. Deactivation
+    /// restores the original content without changing its footprint.
+    ///
+    /// - Parameters:
+    ///   - active: `true` to render the image-masked skeleton.
+    ///   - image: The image whose alpha channel defines the visible shimmer silhouette.
+    /// - Returns: A view that conditionally renders the masked skeleton.
     func skeleton(_ active: Bool, mask image: Image) -> some View {
         modifier(MaskedSkeletonModifier(active: active, maskImage: image))
     }
 }
 
+/// Renders a geometric or multiline placeholder over one hidden content view.
 private struct SkeletonModifier: ViewModifier {
+    /// Whether the placeholder replaces visible content.
     let active: Bool
+    /// The shape used for non-text placeholders.
     let shape: SkeletonShape
+    /// The text style used to derive multiline metrics, if requested.
     let textStyle: Font.TextStyle?
+    /// The configuration inherited from the nearest appearance provider.
     @Environment(\.skeletonAppearance) private var config
 
+    /// Conditionally hides content and overlays the appropriate placeholder renderer.
+    ///
+    /// - Parameter content: The original view content and its layout footprint.
+    /// - Returns: The original content or its skeleton replacement.
     func body(content: Content) -> some View {
         if active {
             content.hidden().overlay {
@@ -40,11 +61,19 @@ private struct SkeletonModifier: ViewModifier {
     }
 }
 
+/// Renders a shimmer clipped to a supplied SwiftUI image.
 private struct MaskedSkeletonModifier: ViewModifier {
+    /// Whether the masked placeholder replaces visible content.
     let active: Bool
+    /// The image whose alpha channel clips the shimmer.
     let maskImage: Image
+    /// The configuration inherited from the nearest appearance provider.
     @Environment(\.skeletonAppearance) private var config
 
+    /// Conditionally hides content and overlays an image-masked animated fill.
+    ///
+    /// - Parameter content: The original content whose footprint is retained.
+    /// - Returns: The original content or its masked skeleton replacement.
     func body(content: Content) -> some View {
         if active {
             content.hidden().overlay {
@@ -62,7 +91,12 @@ private struct MaskedSkeletonModifier: ViewModifier {
     }
 }
 
-/// baseColor 填充 + 沿 direction 平移的高光带（几何/蒙版两条路径共用）。
+/// Builds the shared base fill and directional highlight used by all SwiftUI renderers.
+///
+/// - Parameters:
+///   - config: The active colors, band width, and sweep direction.
+///   - phase: The normalized leading-edge position for the current frame.
+/// - Returns: A fill view before shape or image clipping is applied.
 func shimmerFill(config: SkeletonConfiguration, phase: CGFloat) -> some View {
     let pts = config.direction.gradientPoints(phase: phase, bandWidth: config.bandWidth)
     return config.baseColor.color.overlay {
@@ -72,11 +106,14 @@ func shimmerFill(config: SkeletonConfiguration, phase: CGFloat) -> some View {
     }
 }
 
-/// 单条：按 shape 选原生形状，底色填充 + 同相位扫光。
+/// Renders one geometric placeholder using the shared animation phase.
 private struct ShimmerSingle: View {
+    /// The appearance and motion configuration for this placeholder.
     let config: SkeletonConfiguration
+    /// The shape that clips the animated fill.
     let shape: SkeletonShape
 
+    /// The continuously animated placeholder content.
     var body: some View {
         TimelineView(.animation) { context in
             let phase = ShimmerPhase.phase(
@@ -86,6 +123,10 @@ private struct ShimmerSingle: View {
         }
     }
 
+    /// Clips the animated fill to the selected native SwiftUI shape.
+    ///
+    /// - Parameter phase: The normalized leading-edge position for the current frame.
+    /// - Returns: The clipped placeholder view.
     @ViewBuilder
     private func shaped(phase: CGFloat) -> some View {
         switch shape {
@@ -98,17 +139,26 @@ private struct ShimmerSingle: View {
         }
     }
 
+    /// Creates the unshaped shimmer fill for one phase.
+    ///
+    /// - Parameter phase: The normalized leading-edge position for the current frame.
+    /// - Returns: The shared shimmer fill view.
     private func fill(phase: CGFloat) -> some View {
         shimmerFill(config: config, phase: phase)
     }
 }
 
-/// 多行文本骨架：用 SkeletonLineMetrics 由 footprint 高度自动算行数，每行占 lineHeight、
-/// 条本体 ≈ 字形主体，顶对齐排列、底部余量留白；末行约 60% 宽，全部同相位扫光。
+/// Renders top-aligned multiline bars derived from the hidden content's footprint.
+///
+/// Every bar uses the same phase. The final bar uses 60 percent of the available
+/// width when more than one line is present.
 private struct ShimmerLines: View {
+    /// The appearance and motion configuration shared by all bars.
     let config: SkeletonConfiguration
+    /// The resolved dynamic line height used to calculate bar count and spacing.
     let lineHeight: CGFloat
 
+    /// The multiline placeholder measured inside the hidden content footprint.
     var body: some View {
         GeometryReader { geo in
             let n = SkeletonLineMetrics.lineCount(height: geo.size.height, lineHeight: lineHeight)
@@ -129,6 +179,13 @@ private struct ShimmerLines: View {
         }
     }
 
+    /// Builds one clipped shimmer bar and fills the remaining row width with space.
+    ///
+    /// - Parameters:
+    ///   - width: The visible bar width, in points.
+    ///   - height: The visible bar height, in points.
+    ///   - phase: The normalized leading-edge position for the current frame.
+    /// - Returns: A leading-aligned bar row.
     private func bar(width: CGFloat, height: CGFloat, phase: CGFloat) -> some View {
         let shape = RoundedRectangle(cornerRadius: min(config.cornerRadius, height / 2), style: .continuous)
         let pts = config.direction.gradientPoints(phase: phase, bandWidth: config.bandWidth)

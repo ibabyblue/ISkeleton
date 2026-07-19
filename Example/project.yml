@@ -26,3 +26,28 @@ targets:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+  ISkeletonDemoUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - ISkeletonDemoUITests
+    dependencies:
+      - target: ISkeletonDemo
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.ibabyblue.ISkeletonDemoUITests
+        SWIFT_VERSION: "5.10"
+
+schemes:
+  ISkeletonDemo:
+    build:
+      targets:
+        ISkeletonDemo: all
+        ISkeletonDemoUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ISkeletonDemoUITests

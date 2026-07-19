@@ -5,9 +5,15 @@ import UIKit
 import AppKit
 #endif
 
-/// 把 SwiftUI 的 `Font.TextStyle` 换算成单行高度（跟随系统动态字号）。
-/// SwiftUI 的 `Font` 不透明、无法直接取行高，故经平台原生字体 API 取值。
+/// Resolves dynamic line heights for SwiftUI text styles through native font APIs.
+///
+/// SwiftUI fonts do not expose line metrics directly, so each supported platform
+/// maps the style to its UIKit or AppKit equivalent.
 enum TextStyleMetrics {
+    /// Returns the current dynamic line height for a SwiftUI text style.
+    ///
+    /// - Parameter style: The semantic SwiftUI text style to resolve.
+    /// - Returns: The native preferred font's line height, or `17` on unsupported platforms.
     static func lineHeight(for style: Font.TextStyle) -> CGFloat {
         #if canImport(UIKit)
         return UIFont.preferredFont(forTextStyle: uiTextStyle(style)).lineHeight
@@ -19,6 +25,10 @@ enum TextStyleMetrics {
     }
 
     #if canImport(UIKit)
+    /// Maps a SwiftUI text style to the equivalent UIKit semantic style.
+    ///
+    /// - Parameter s: The SwiftUI text style to map.
+    /// - Returns: The corresponding UIKit style, or `.body` for an unknown future style.
     private static func uiTextStyle(_ s: Font.TextStyle) -> UIFont.TextStyle {
         switch s {
         case .largeTitle:  return .largeTitle
@@ -36,6 +46,10 @@ enum TextStyleMetrics {
         }
     }
     #elseif canImport(AppKit)
+    /// Maps a SwiftUI text style to the equivalent AppKit semantic style.
+    ///
+    /// - Parameter s: The SwiftUI text style to map.
+    /// - Returns: The corresponding AppKit style, or `.body` for an unknown future style.
     private static func nsTextStyle(_ s: Font.TextStyle) -> NSFont.TextStyle {
         switch s {
         case .largeTitle:  return .largeTitle

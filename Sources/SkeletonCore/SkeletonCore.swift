@@ -1,1 +1,1 @@
-//  SkeletonCore — 平台无关的骨架逻辑（相位、配置、颜色值类型）。
+// SkeletonCore contains platform-neutral phase, configuration, color, shape, and line geometry.

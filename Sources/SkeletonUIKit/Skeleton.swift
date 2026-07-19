@@ -3,32 +3,39 @@ import UIKit
 import SkeletonCore
 import ObjectiveC
 
-/// 全局骨架外观入口。仅主线程读写（App 启动时一次性设置）。
+/// Provides the main-actor global appearance used by UIKit skeleton activations.
 @MainActor
 public enum Skeleton {
-    /// 全局默认外观；所有 `skeleton(_:)` 默认使用（未传 per-call appearance 时）。
+    /// The configuration snapshotted by activations that do not supply a per-call override.
     public static var appearance: SkeletonConfiguration = .default
 }
 
-/// 关联对象 key：独立分配的稳定指针。
+/// The stable associated-object key for a view's active overlay.
 nonisolated(unsafe) private let skeletonOverlayKey = malloc(1)!
+/// The stable associated-object key for a label's saved text color.
 nonisolated(unsafe) private let skeletonTextColorKey = malloc(1)!
 
+/// Adds main-actor geometric and image-masked skeleton activation to UIKit views.
 public extension UIView {
-    /// active 时叠加骨架并隐藏 host 内容（UILabel 文字）；false 移除并还原。
-    /// 非 UILabel：单条用 `shape`（如 `.circle` 圆形头像）；UILabel：文案驱动逐行（shape 被忽略）。
+    /// Activates or removes a geometric skeleton overlay on this view.
     ///
-    /// 契约：loading 前先给 host 设置代表性内容（UILabel 设代表性文案）撑出尺寸/行数，再 `skeleton(true)`；
-    /// 骨架激活期间改文案，请先 `skeleton(false)` 再设文案后重新 `skeleton(true)`。
-    /// 注：仅隐藏 UILabel 的 `textColor`；`attributedText` 中显式着色的富文本不在此机制内。
-    /// `appearance` 非空时仅本次激活使用，否则用全局 `Skeleton.appearance`。
+    /// Set representative label text before activation because overlay geometry is
+    /// captured when the skeleton is created. To refresh an active skeleton after
+    /// content changes, deactivate it, update content, and activate it again.
+    /// Repeating the same active state is idempotent. Multiline labels use their
+    /// text layout instead of `shape`, and only `textColor` is hidden and restored.
+    ///
+    /// - Parameters:
+    ///   - active: `true` to create the overlay or `false` to remove it and restore hidden label color.
+    ///   - shape: The geometric shape used for non-label hosts. Multiline labels use line geometry instead.
+    ///   - appearance: A per-activation configuration. Pass `nil` to snapshot ``Skeleton/appearance``.
     @MainActor
     func skeleton(_ active: Bool,
                   shape: SkeletonShape = .roundedRect(cornerRadius: nil),
                   appearance: SkeletonConfiguration? = nil) {
         if active {
             if let existing = currentSkeletonOverlay, existing.superview === self {
-                return   // 幂等
+                return   // Repeated activation is idempotent.
             }
             if let stale = currentSkeletonOverlay {
                 ShimmerClock.shared.unregister(stale)
@@ -47,10 +54,17 @@ public extension UIView {
         }
     }
 
-    /// active 时叠加 baseColor + 同相位高光，用图片 alpha 裁出 logo 轮廓；false 移除还原。
-    /// `.ownImage` 仅对 `UIImageView` 有效；无可用图（或图无 cgImage）则不激活（安全降级）。
-    /// 同一 view 上 `skeleton(_:shape:)` 与 `skeleton(_:mask:)` 互斥：两者共用同一 overlay，
-    /// 切换前须先 `skeleton(false)`，否则已激活的 overlay 会因幂等守卫被保留、新请求被忽略。
+    /// Activates or removes a skeleton clipped by a bitmap image's alpha channel.
+    ///
+    /// ``SkeletonMask/ownImage`` resolves only for a `UIImageView`. A missing image
+    /// or an image without a `CGImage` leaves the view unchanged. Image and geometric
+    /// skeletons share one overlay, so deactivate before switching rendering modes.
+    /// Repeating activation while an overlay is present keeps the existing overlay.
+    ///
+    /// - Parameters:
+    ///   - active: `true` to create an image-masked overlay or `false` to remove it.
+    ///   - mask: The bitmap image source whose alpha clips the shimmer.
+    ///   - appearance: A per-activation configuration. Pass `nil` to snapshot ``Skeleton/appearance``.
     @MainActor
     func skeleton(_ active: Bool, mask: SkeletonMask,
                   appearance: SkeletonConfiguration? = nil) {
@@ -74,6 +88,10 @@ public extension UIView {
         }
     }
 
+    /// Resolves a mask source to the bitmap required by Core Animation.
+    ///
+    /// - Parameter mask: An explicit image or the receiver's own image.
+    /// - Returns: A bitmap image, or `nil` when the source is unavailable or not bitmap-backed.
     private func resolveMaskCGImage(_ mask: SkeletonMask) -> CGImage? {
         switch mask {
         case .image(let img): return img.cgImage
@@ -81,8 +99,9 @@ public extension UIView {
         }
     }
 
+    /// Removes the current overlay, unregisters it from the clock, and restores label color.
     private func tearDownSkeleton() {
-        // 先无条件还原文字（自守卫于 savedTextColor），使恢复不依赖 overlay 状态。
+        // Restore text first so cleanup does not depend on matching overlay storage.
         restoreLabelTextIfNeeded()
         guard let overlay = currentSkeletonOverlay else { return }
         ShimmerClock.shared.unregister(overlay)
@@ -90,24 +109,27 @@ public extension UIView {
         currentSkeletonOverlay = nil
     }
 
-    /// 暂存并清空 UILabel 文字颜色（骨架期不可见真实文字）。
+    /// Saves and clears a label's text color once so real text stays hidden under shimmer.
     private func hideLabelTextIfNeeded() {
         guard let label = self as? UILabel, savedTextColor == nil else { return }
         savedTextColor = label.textColor
         label.textColor = .clear
     }
 
+    /// Restores a previously saved label text color and clears the saved value.
     private func restoreLabelTextIfNeeded() {
         guard let label = self as? UILabel, let color = savedTextColor else { return }
         label.textColor = color
         savedTextColor = nil
     }
 
+    /// The overlay retained on this view through Objective-C associated storage.
     private var currentSkeletonOverlay: SkeletonOverlayView? {
         get { objc_getAssociatedObject(self, skeletonOverlayKey) as? SkeletonOverlayView }
         set { objc_setAssociatedObject(self, skeletonOverlayKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
 
+    /// The original label color retained while a skeleton hides the label text.
     private var savedTextColor: UIColor? {
         get { objc_getAssociatedObject(self, skeletonTextColorKey) as? UIColor }
         set { objc_setAssociatedObject(self, skeletonTextColorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }

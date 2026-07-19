@@ -1,21 +1,30 @@
 import Foundation
 import CoreGraphics
 
-/// 骨架外观与扫光参数。所有字段有合理默认值。
+/// The platform-neutral appearance and animation parameters for a skeleton.
 public struct SkeletonConfiguration: Equatable, Sendable {
-    /// 占位条底色。
+    /// The base fill color of each placeholder.
     public var baseColor: SkeletonRGBA
-    /// 扫光高光色。
+    /// The color at the center of the moving highlight band.
     public var highlightColor: SkeletonRGBA
-    /// 单次扫光时长（秒）。
+    /// The duration of one complete sweep, in seconds.
     public var duration: TimeInterval
-    /// 高光带归一化宽度。
+    /// The highlight band's width normalized to the placeholder's sweep axis.
     public var bandWidth: CGFloat
-    /// 占位条默认圆角。
+    /// The default corner radius for rounded-rectangle placeholders, in points.
     public var cornerRadius: CGFloat
-    /// 扫光方向。
+    /// The direction in which the highlight band moves.
     public var direction: ShimmerDirection
 
+    /// Creates a skeleton configuration.
+    ///
+    /// - Parameters:
+    ///   - baseColor: The placeholder's base fill color.
+    ///   - highlightColor: The color at the center of the highlight band.
+    ///   - duration: The duration of one sweep, in seconds. The default is `1.4`.
+    ///   - bandWidth: The normalized highlight-band width. The default is `0.6`.
+    ///   - cornerRadius: The default rounded-rectangle radius, in points. The default is `5`.
+    ///   - direction: The shimmer sweep direction. The default is ``ShimmerDirection/leftToRight``.
     public init(baseColor: SkeletonRGBA,
                 highlightColor: SkeletonRGBA,
                 duration: TimeInterval = 1.4,
@@ -30,7 +39,7 @@ public struct SkeletonConfiguration: Equatable, Sendable {
         self.direction = direction
     }
 
-    /// 默认外观：中性灰底 + 偏白高光。
+    /// The default neutral-gray fill and near-white highlight appearance.
     public static let `default` = SkeletonConfiguration(
         baseColor: SkeletonRGBA(r: 0.91, g: 0.85, b: 0.85, a: 0.8),
         highlightColor: SkeletonRGBA(r: 0.99, g: 0.98, b: 0.98, a: 0.8)

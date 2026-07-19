@@ -2,50 +2,67 @@
 import UIKit
 import SkeletonCore
 
-/// 被 ShimmerClock 每帧驱动的对象。
+/// A main-actor object that receives synchronized phases from ``ShimmerClock``.
 @MainActor
 protocol ShimmerDriven: AnyObject {
-    /// 应用本帧扫光相位（high-light band 前缘的归一化位置）。
+    /// Applies the normalized highlight-band phase for the current frame.
+    ///
+    /// - Parameter phase: The normalized position of the band's leading edge.
     func applyShimmerPhase(_ phase: CGFloat)
-    /// 当前生效的外观（用于读取 duration/bandWidth）。
+    /// The configuration whose duration and band width drive this object.
     var shimmerConfiguration: SkeletonConfiguration { get }
 }
 
-/// CADisplayLink 弱引用代理，避免 link 强引用 clock。
+/// Forwards display-link ticks without allowing the link to retain the shared clock.
 private final class ClockProxy: NSObject {
+    /// The weak clock that receives frame callbacks.
     weak var clock: ShimmerClock?
+    /// Forwards one frame or invalidates the display link after the clock is released.
+    ///
+    /// - Parameter link: The display link producing the frame callback.
     @MainActor @objc func tick(_ link: CADisplayLink) {
         if let clock { clock.onFrame() } else { link.invalidate() }
     }
 }
 
-/// 进程内共享的扫光时钟：一条 CADisplayLink 以同一相位驱动所有激活的 overlay ⇒ 全局同相位。
+/// Drives every live UIKit skeleton from one process-wide display link and phase.
 @MainActor
 final class ShimmerClock {
+    /// The process-wide clock shared by all UIKit skeleton overlays.
     static let shared = ShimmerClock()
 
+    /// Weak storage for registered phase consumers.
     private let driven = NSHashTable<AnyObject>.weakObjects()
+    /// The display link retained only while at least one live consumer exists.
     private var displayLink: CADisplayLink?
 
-    /// 测试用：当前注册（仍存活）的驱动对象数量。
+    /// The number of registered consumers that remain alive, exposed for tests.
     var drivenCountForTesting: Int { driven.allObjects.count }
 
+    /// Creates the singleton and observes foreground transitions that may suspend its link.
     private init() {
         NotificationCenter.default.addObserver(
             self, selector: #selector(handleForeground),
             name: UIApplication.willEnterForegroundNotification, object: nil)
     }
 
+    /// Registers a weak phase consumer and starts the clock when necessary.
+    ///
+    /// - Parameter object: The consumer to update on each frame.
     func register(_ object: ShimmerDriven) {
         driven.add(object)
         startIfNeeded()
     }
 
+    /// Removes a phase consumer and stops the clock when no consumers remain.
+    ///
+    /// - Parameter object: The consumer to unregister.
     func unregister(_ object: ShimmerDriven) {
         driven.remove(object)
         stopIfIdle()
     }
 
+    /// Creates and schedules the display link only when a live consumer needs frames.
     private func startIfNeeded() {
         guard displayLink == nil, driven.anyObject != nil else { return }
         let proxy = ClockProxy()
@@ -55,12 +72,14 @@ final class ShimmerClock {
         displayLink = link
     }
 
+    /// Invalidates and releases the display link when weak consumer storage is empty.
     private func stopIfIdle() {
         guard driven.allObjects.isEmpty else { return }
         displayLink?.invalidate()
         displayLink = nil
     }
 
+    /// Calculates one absolute-time phase and applies it to every live consumer.
     fileprivate func onFrame() {
         let now = Date().timeIntervalSinceReferenceDate
         let objects = driven.allObjects.compactMap { $0 as? ShimmerDriven }
@@ -72,8 +91,9 @@ final class ShimmerClock {
         }
     }
 
+    /// Recreates the display link after UIKit returns to the foreground.
     @objc private func handleForeground() {
-        // 回前台时 link 可能被系统暂停；重启以恢复。
+        // Recreate a link that UIKit may have suspended while the app was inactive.
         displayLink?.invalidate()
         displayLink = nil
         startIfNeeded()

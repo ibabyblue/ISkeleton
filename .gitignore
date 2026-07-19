@@ -2,10 +2,13 @@
 .build/
 .swiftpm/
 DerivedData/
-# Xcode 个人状态（任意层级，含 demo/ 下的工程）
+# Xcode per-user state at any depth, including Example projects
 xcuserdata/
 *.xcuserstate
 **/xcshareddata/IDEWorkspaceChecks.plist
 
-# superpowers 规划产物（plan/spec），本地保留不入库
+# Local Superpowers plans and specifications
 docs/
+
+# Repository-local agent guidance
+/AGENTS.md

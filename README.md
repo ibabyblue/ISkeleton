@@ -1,342 +1,145 @@
 # ISkeleton
 
-A shimmer "skeleton" loading package for SwiftUI and UIKit. ISkeleton works at the **slot
-level**: each real view renders a shimmering placeholder while its data is pending, then swaps
-to the real content the moment that data arrives. All shimmers across both frameworks animate
-**in phase** off a shared time-based clock, so the whole screen breathes together. Pure
-Swift, zero third-party dependencies.
+ISkeleton is a zero-dependency Swift package for synchronized, slot-level skeleton loading states in SwiftUI and UIKit. Each placeholder keeps the real view's footprint, while both framework integrations derive shimmer phase from the same absolute-time calculation.
 
 ![iOS 15+](https://img.shields.io/badge/iOS-15%2B-blue)
-![Swift 5.10](https://img.shields.io/badge/Swift-5.10%2B-orange)
+![macOS 12+](https://img.shields.io/badge/macOS-12%2B-blue)
+![Swift 5.10+](https://img.shields.io/badge/Swift-5.10%2B-orange)
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ## Features
 
-- **Slot-level skeleton** — there is no full-screen "loading view." Every real view (label,
-  image, card) draws its own shimmer placeholder while pending, and you flip it off per-slot as
-  data lands.
-- **Content-driven sizing** — the placeholder's size comes from the *view's own content*, never
-  from absent data. Feed a representative value while loading and the skeleton matches the real
-  layout exactly, so nothing reflows when data arrives.
-- **In-phase shimmer** — both frameworks read the same `ShimmerPhase` from a single time source,
-  so every placeholder's highlight band moves together.
-- **SwiftUI + UIKit** — idiomatic API on each side: a `View` modifier and a `UIView` method.
-- **Per-line UILabel bars** — a multi-line `UILabel` placeholder draws one shimmer bar per text
-  line, mirroring how the real text will wrap.
+- Slot-level placeholders that preserve the loaded layout
+- In-phase shimmer across SwiftUI and UIKit
+- Rounded rectangle, circle, and capsule shapes
+- Eight horizontal, vertical, and diagonal sweep directions
+- Content-driven multiline text bars
+- Transparent-image alpha masks for logos and silhouettes
+- Environment-scoped SwiftUI appearance and nested overrides
+- Global UIKit appearance and per-activation overrides
+- Dynamic type support and main-actor UIKit lifecycle handling
+- No external dependencies
 
 ## Requirements
 
-| | Minimum |
-|---|---|
+| Toolchain or platform | Minimum |
+| --- | --- |
 | iOS | 15.0 |
 | macOS | 12.0 |
 | Swift | 5.10 |
+| Xcode | 15.3 or newer |
 
 ## Installation
 
-### Swift Package Manager
-
-In Xcode choose **File → Add Package Dependencies**, enter the repository URL, or add to
-`Package.swift`. The package ships three products:
-
-| Product | Module | Use when |
-|---|---|---|
-| `Skeleton-Core` | `SkeletonCore` | Shared config / color / phase types only |
-| `Skeleton-SwiftUI` | `SkeletonSwiftUI` | Building SwiftUI views |
-| `Skeleton-UIKit` | `SkeletonUIKit` | Building UIKit views |
-
-`Skeleton-SwiftUI` and `Skeleton-UIKit` each `@_exported import SkeletonCore`, so importing one
-of them gives you the config types too — you do not need to depend on `Skeleton-Core` directly.
+Add `https://github.com/ibabyblue/ISkeleton.git` through Xcode's package dependency interface and select version `0.4.0` or later, or add it to `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ibabyblue/ISkeleton", from: "0.2.0")
-],
-targets: [
-    .target(name: "YourTarget", dependencies: [
-        // pick the one(s) you need
-        .product(name: "Skeleton-SwiftUI", package: "ISkeleton"),
-        .product(name: "Skeleton-UIKit",   package: "ISkeleton"),
-    ])
+    .package(
+        url: "https://github.com/ibabyblue/ISkeleton.git",
+        from: "0.4.0"
+    )
 ]
 ```
 
-```swift
-import SkeletonSwiftUI   // SwiftUI
-import SkeletonUIKit     // UIKit
-```
+Choose the product that owns your integration:
 
-## SwiftUI Usage
+| Product | Module | Purpose |
+| --- | --- | --- |
+| `Skeleton-Core` | `SkeletonCore` | Platform-neutral configuration, colors, shapes, phase, and geometry |
+| `Skeleton-SwiftUI` | `SkeletonSwiftUI` | SwiftUI modifiers, environment appearance, text metrics, and image masks |
+| `Skeleton-UIKit` | `SkeletonUIKit` | UIKit overlays, label layout, image masks, and shared display-link lifecycle |
 
-Inject the appearance once near a root, then mark each slot active while its data is `nil`. The
-key is to **feed representative content so the view reserves its real size** — bind to a typical
-placeholder string instead of an empty one, otherwise the slot collapses.
+The SwiftUI and UIKit modules re-export SkeletonCore, so application targets normally link only the framework products they use.
+
+## SwiftUI Quick Start
+
+Feed representative content while data is unavailable so the hidden view reserves its loaded size:
 
 ```swift
 import SkeletonSwiftUI
+import SwiftUI
 
-struct ProductCell: View {
-    let model: Product?   // nil while loading
+struct ProductTitle: View {
+    let title: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Representative text gives the label its size during loading.
-            Text(model?.title ?? "Loading product name")
-                .skeleton(model?.title == nil)
-
-            Text(model?.price ?? "￥00.00")
-                .font(.headline)
-                .skeleton(model?.price == nil)
-        }
-        // Inject appearance for the whole subtree (optional; .default otherwise).
-        .skeletonAppearance(.default)
+        Text(title ?? "Loading product name")
+            .font(.headline)
+            .skeleton(title == nil)
+            .skeletonAppearance(.default)
     }
 }
 ```
 
-Use `shape:` to control the placeholder outline and `textStyle:` to draw a multi-line text
-placeholder:
+Use the same semantic style for multiline text:
 
 ```swift
-// 圆形头像（shape: .circle）
-Circle().frame(width: 56, height: 56)
-    .skeleton(isLoading, shape: .circle)
-
-// 多行文本：占位文案折几行，骨架就画几条（条数 = footprint 高度 ÷ 行高）
-Text(bio).skeleton(isLoading, textStyle: .footnote)
+Text(summary ?? representativeSummary)
+    .font(.footnote)
+    .skeleton(summary == nil, textStyle: .footnote)
 ```
 
-A complete card — circle avatar, single-line name/price, multi-line bio — mirroring the demo:
+## UIKit Quick Start
 
-```swift
-import SkeletonSwiftUI
-
-struct ProfileCard: View {
-    let profile: Profile?                       // nil while loading
-    private var isLoading: Bool { profile == nil }
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Circle().frame(width: 56, height: 56)
-                .skeleton(isLoading, shape: .circle)               // 圆形头像
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text(profile?.name ?? "Loading name")              // 单行：跟随文本尺寸
-                    .font(.headline)
-                    .skeleton(isLoading)
-
-                Text(profile?.price ?? "￥00.00")
-                    .font(.subheadline)
-                    .skeleton(isLoading)
-
-                // 多行：喂一段「折行数与真实数据相近」的占位，shimmer 行数才会对得上
-                Text(profile?.bio ?? "热爱旅行与摄影，周末喜欢去山里露营，记录值得纪念的瞬间。")
-                    .font(.footnote)
-                    .skeleton(isLoading, textStyle: .footnote)     // textStyle 要与 .font 一致
-            }
-        }
-        .skeletonAppearance(.default)
-    }
-}
-```
-
-> Multi-line tip: the bar count comes from how the *placeholder* wraps, since the real data isn't
-> loaded yet. Feed a representative string whose line count matches the typical real text, and pass
-> the **same** text style to `.font` and `textStyle:` so the line height lines up.
-
-`.skeleton(_ active: Bool, shape: SkeletonShape = ..., textStyle: Font.TextStyle? = nil)` hides the real content,
-keeps its footprint, and overlays the shimmer. The `skeleton(_:shape:textStyle:)` signature replaces
-the old `cornerRadius:` parameter — pass `shape: .roundedRect(cornerRadius:)` for a custom corner
-radius, or `shape: .circle` for a circular placeholder. When the shape is left at its default the
-appearance's `cornerRadius` applies. `.skeletonAppearance(_:)` injects a `SkeletonConfiguration`
-into the environment; every `.skeleton` in the subtree reuses it.
-
-## UIKit Usage
-
-Set the global appearance once at launch, then drive each view's skeleton with
-`skeleton(_:)`. As in SwiftUI, set representative text **first** so the view has a real size and
-line count, then activate.
+UIKit snapshots label layout and appearance when a skeleton activates. Deactivate before changing content or configuration:
 
 ```swift
 import SkeletonUIKit
 
-// At app launch, once:
-Skeleton.appearance = .default
-```
+@MainActor
+func configureTitle(_ title: String?) {
+    titleLabel.skeleton(false)
 
-A complete card configure — same slots as the SwiftUI example. Note the contract: **set
-representative text first, then activate**; `bioLabel.numberOfLines = 0` so it wraps freely.
-
-```swift
-// bioLabel.numberOfLines = 0  // configured once at setup
-
-func configure(with profile: Profile?) {
-    if let profile {                                   // data arrived → real content
-        avatarView.skeleton(false)
-        nameLabel.skeleton(false);  nameLabel.text  = profile.name
-        priceLabel.skeleton(false); priceLabel.text = profile.price
-        bioLabel.skeleton(false);   bioLabel.text   = profile.bio
-    } else {                                           // loading → representative text FIRST
-        nameLabel.text  = "Loading name"
-        priceLabel.text = "￥00.00"
-        bioLabel.text   = "热爱旅行与摄影，周末喜欢去山里露营，记录值得纪念的瞬间。"
-        avatarView.skeleton(true, shape: .circle)      // 圆形头像
-        nameLabel.skeleton(true)
-        priceLabel.skeleton(true)
-        bioLabel.skeleton(true)                        // numberOfLines = 0 → 按真实文本逐行画条
+    if let title {
+        titleLabel.text = title
+    } else {
+        titleLabel.text = "Loading product name"
+        titleLabel.skeleton(true)
     }
 }
 ```
 
-Per-call override — pass `appearance:` to use a custom appearance for just this activation, while
-everything else keeps the global default:
+Set a global appearance once with `Skeleton.appearance`, or pass `appearance:` for one activation.
+
+## Shapes and Image Masks
 
 ```swift
-let promo = SkeletonConfiguration(
-    baseColor:      SkeletonRGBA(r: 0.96, g: 0.86, b: 0.86, a: 0.9),
-    highlightColor: SkeletonRGBA(r: 1.0,  g: 0.95, b: 0.95, a: 0.9))
+avatar.skeleton(isLoading, shape: .circle)
 
-bioLabel.skeleton(true, appearance: promo)   // 这个视图用 promo 外观
-priceLabel.skeleton(true)                    // 其它仍用全局 Skeleton.appearance
+Image("brand-logo")
+    .skeleton(isLoading, mask: Image("brand-logo"))
+
+logoImageView.skeleton(true, mask: .ownImage)
 ```
 
-**Contract — set text first, toggle to change text:** `skeleton(true)` snapshots the host's
-size and line count at the moment you activate it. So always set representative text *before*
-calling `skeleton(true)`. To change the text while a skeleton is already active, deactivate
-first: `skeleton(false)` → set the new text → `skeleton(true)`. (Reactivating with the same
-state is idempotent and safe.)
+Image masks use alpha. Transparent-background assets produce silhouettes; opaque images produce rectangles. UIKit requires a bitmap-backed `CGImage`, so rasterize vector assets and SF Symbols before activation.
 
-`skeleton(_ active: Bool, shape: SkeletonShape = ..., appearance: SkeletonConfiguration? = nil)`
-overlays the shimmer on the view's own `bounds` without affecting its intrinsic size. `appearance`
-overrides `Skeleton.appearance` for that activation only (omit it to use the global default); the
-default shape falls back to the resolved appearance's `cornerRadius`, while `shape: .circle` clips
-to a circle. For a multi-line `UILabel`, the placeholder draws one bar per text line. Set
-`Skeleton.appearance` on the main thread.
+Geometric and image-mask activation are separate rendering modes. Deactivate a UIKit view before switching between them.
 
-UIKit hides a `UILabel`'s text while the skeleton is active and restores it on deactivate, so the
-placeholder text never shows through under the shimmer. `attributedText` with explicit colors is
-out of scope.
+## Important Sizing Contract
 
-## Configuration
+ISkeleton cannot infer future layout from absent data. Use representative strings for data-driven text, placeholder rows for unloaded collections, and explicit frames for fixed-size media. A view with a zero footprint produces a zero-size skeleton.
 
-`SkeletonConfiguration` controls appearance and shimmer for both frameworks (`.default` shown):
+## Documentation
 
-| Field | Type | Default | Meaning |
-|---|---|---|---|
-| `baseColor` | `SkeletonRGBA` | neutral grey | Placeholder fill color |
-| `highlightColor` | `SkeletonRGBA` | near-white | Moving highlight band color |
-| `duration` | `TimeInterval` | `1.4` | One full sweep, in seconds |
-| `bandWidth` | `CGFloat` | `0.6` | Highlight band width, normalized to the slot |
-| `cornerRadius` | `CGFloat` | `5` | Default placeholder corner radius |
-| `direction` | `ShimmerDirection` | `.leftToRight` | Shimmer sweep direction (8 presets, incl. diagonals) |
+Use the target-owned DocC catalogs for complete behavior and API detail:
 
-Colors are platform-neutral: `SkeletonRGBA(r:g:b:a:)` with each component in `0...1` (`a`
-defaults to `1`). Build a custom appearance like so:
+- [SkeletonCore](Sources/SkeletonCore/SkeletonCore.docc/SkeletonCore.md)
+- [SkeletonSwiftUI](Sources/SkeletonSwiftUI/SkeletonSwiftUI.docc/SkeletonSwiftUI.md)
+- [SkeletonUIKit](Sources/SkeletonUIKit/SkeletonUIKit.docc/SkeletonUIKit.md)
 
-```swift
-let config = SkeletonConfiguration(
-    baseColor:      SkeletonRGBA(r: 0.91, g: 0.85, b: 0.85, a: 0.8),
-    highlightColor: SkeletonRGBA(r: 0.99, g: 0.98, b: 0.98, a: 0.8),
-    duration:       1.4,
-    bandWidth:      0.6,
-    cornerRadius:   5
-)
+Build a catalog with `xcodebuild docbuild -scheme Skeleton-Core`, `Skeleton-SwiftUI`, or `Skeleton-UIKit`.
 
-// SwiftUI: .skeletonAppearance(config)
-// UIKit:   Skeleton.appearance = config
-```
+## Example
 
-`direction` controls the shimmer sweep — `.leftToRight` (default), the other three edges
-(`.rightToLeft`, `.topToBottom`, `.bottomToTop`), or the four diagonals such as
-`.topRightToBottomLeft` (top-right → bottom-left):
+Open `Example/ISkeletonDemo.xcodeproj` to run live SwiftUI and UIKit labs for every direction, shape, theme, duration, band width, multiline layout, local override, and image-mask integration.
 
-```swift
-var config = SkeletonConfiguration.default
-config.direction = .topRightToBottomLeft   // 斜向扫光：右上 → 左下
-```
-
-## Image-masked skeleton (logo silhouette)
-
-Render a transparent logo as a skeleton in its own alpha silhouette — same fill, highlight, and
-in-phase sweep as every other skeleton, but clipped to the image instead of a geometric shape.
-
-```swift
-// SwiftUI — pass the logo image as the mask
-Image("logo").resizable().scaledToFit().frame(width: 160, height: 48)
-    .skeleton(isLoading, mask: Image("logo"))
-
-// UIKit — a UIImageView can mask with its own image
-logoImageView.skeleton(true,  mask: .ownImage)   // loading: logo-shaped shimmer
-logoImageView.skeleton(false, mask: .ownImage)   // done: real logo restored
-```
-
-The silhouette comes from the image's **alpha**, so use a transparent-background logo; an opaque
-rectangular image degrades to a plain rectangular skeleton. On UIKit the mask image must be
-bitmap-backed (have a `cgImage`) — rasterize vector assets (SF Symbols, PDFs) first; a vector image
-with no `cgImage` safely degrades to no skeleton. `SkeletonMask` is `.image(UIImage)` or `.ownImage`
-(UIImageView only).
-
-## Platform Differences
-
-Multi-line text is the one place the two frameworks intentionally diverge:
-
-- **SwiftUI** takes a `textStyle:` and derives the line count automatically: it divides the
-  hidden content's footprint height by that text style's line height, so the number of bars
-  matches how the real text actually wraps. Each bar is the height of a glyph body with a gap.
-- **UIKit** is **text-driven**: a multi-line `UILabel` draws **one bar per text line**
-  automatically, because UIKit *does* expose per-line layout, so the placeholder mirrors the real
-  wrap. Each bar is shrunk slightly to leave gaps between lines.
-
-Single-line slots look identical on both sides.
-
-## The "collapse" problem
-
-The skeleton's size must come from the **view's own content, never from absent data**. If you
-render a skeleton over a view whose data is `nil`, the view has nothing to size itself from and
-collapses to zero — the shimmer disappears or jumps when real data arrives. Rules of thumb:
-
-- **Empty list** → don't render zero rows; render *N placeholder items* and skeleton each one.
-- **Data-driven width** (a price, a name) → bind to a *representative string* (`"￥00.00"`)
-  while loading so the label reserves real width.
-- **Multi-line height** → reserve a *fixed design line count* (e.g. set `numberOfLines` and a
-  height), or feed *representative multi-line text*, so the block / per-line bars have height.
-- **Fixed-size region** (an avatar, a thumbnail) → give it an *explicit frame*; its size is
-  already content-independent.
-
-## Demo
-
-A runnable demo app lives in `demo/`. The Xcode project is generated with [XcodeGen](https://github.com/yonaskolb/XcodeGen) from `demo/project.yml`:
-
-```bash
-cd demo
-xcodegen generate   # only needed after editing project.yml
-open ISkeletonDemo.xcodeproj
-```
-
-Run it on an iOS simulator. Two tabs, each with a live **control panel** at the top that drives
-every public knob and applies instantly:
-
-- **Direction** — pick any of the 8 `ShimmerDirection` presets and watch the sweep follow.
-- **Shape** — switch the example block between circle / capsule / rounded-rect.
-- **Theme / duration / band-width** — swap the color appearance and tune the shimmer.
-- **Loading** — toggle the whole subtree between shimmer and real content.
-
-The two tabs apply the panel idiomatically per framework:
-
-- **SwiftUI** — the panel state derives a `SkeletonConfiguration` injected through
-  `.skeletonAppearance(config)`; every `.skeleton(…)` in the subtree reacts live. The bio uses
-  `.skeleton(isLoading, textStyle: .footnote)` and draws one bar per wrapped line.
-- **UIKit** — the panel sets the global `Skeleton.appearance` and re-activates each slot
-  (`skeleton(false)` → `skeleton(true)`, honoring the activation-snapshot contract). The bio
-  `UILabel` renders one shimmer bar per text line.
-
-Each tab also has an **override** slot that keeps a fixed contrasting appearance no matter how the
-panel is set — SwiftUI via a nested `.skeletonAppearance(_:)`, UIKit via the per-call
-`skeleton(_:appearance:)` parameter.
-
-(The generated `ISkeletonDemo.xcodeproj` is committed, so the demo also opens without XcodeGen installed.)
+See the [Example guide](Example/README.md) for XcodeGen, build, and UI-test commands.
 
 ## License
 
-MIT.
+ISkeleton is available under the MIT License. See [LICENSE](LICENSE).
+
+Release history is maintained in [CHANGELOG.md](CHANGELOG.md).

@@ -1,10 +1,19 @@
 import CoreGraphics
 import Foundation
 
-/// 扫光相位：把绝对时间映射成高光带前缘的归一化位置。
-/// band 区间为 [phase, phase + bandWidth]；phase 从 -bandWidth（全在左侧外）线性走到 1（全在右侧外），
-/// 按 duration 无缝循环。两平台用同一 `Date().timeIntervalSinceReferenceDate` 代入 → 全局同相位。
+/// Converts absolute time into the normalized leading-edge position of a shimmer band.
+///
+/// The band spans `phase...(phase + bandWidth)`. A phase advances from
+/// `-bandWidth` to `1` over one duration and then repeats. Supplying the same
+/// reference time keeps SwiftUI and UIKit skeletons in phase.
 public enum ShimmerPhase {
+    /// Calculates the shimmer phase for an absolute time.
+    ///
+    /// - Parameters:
+    ///   - time: An absolute time interval, normally measured from the Foundation reference date.
+    ///   - duration: The duration of one complete sweep, in seconds.
+    ///   - bandWidth: The normalized width of the highlight band.
+    /// - Returns: The normalized leading-edge position, or `-bandWidth` when `duration` is not positive.
     public static func phase(at time: TimeInterval,
                              duration: TimeInterval,
                              bandWidth: CGFloat) -> CGFloat {

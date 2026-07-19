@@ -1,18 +1,22 @@
 import SwiftUI
 import SkeletonSwiftUI
 
-/// SwiftUI 演示：顶部实时控制面板驱动一套 `SkeletonConfiguration`（方向/形状/主题/时长/带宽），
-/// 经 `.skeletonAppearance(config)` 注入子树；下方各 slot 用 `.skeleton(isLoading, …)`。
-/// 末尾「局部覆盖卡」用独立 `.skeletonAppearance` 演示子树覆盖——不随面板变。
+/// Demonstrates environment-driven SwiftUI skeleton configuration and local overrides.
 struct SwiftUIDemoView: View {
+    /// The sweep direction selected by the control panel.
     @State private var direction: ShimmerDirection = .leftToRight
+    /// The placeholder shape selected by the control panel.
     @State private var shape: DemoShape = .circle
+    /// The color preset selected by the control panel.
     @State private var theme: DemoColorTheme = .default
+    /// The sweep duration selected by the control panel, in seconds.
     @State private var duration: Double = 1.4
+    /// The normalized highlight-band width selected by the control panel.
     @State private var bandWidth: Double = 0.6
+    /// Whether the controlled examples currently display skeletons.
     @State private var isLoading = true
 
-    /// 面板派生的外观。
+    /// The appearance derived from the current control-panel state.
     private var config: SkeletonConfiguration {
         SkeletonConfiguration(baseColor: theme.base,
                               highlightColor: theme.highlight,
@@ -22,14 +26,16 @@ struct SwiftUIDemoView: View {
                               direction: direction)
     }
 
-    /// 局部覆盖示例固定使用的暖色外观（不随面板变）。
+    /// The fixed warm appearance used to demonstrate a nested environment override.
     private let overrideConfig = SkeletonConfiguration(
         baseColor:      SkeletonRGBA(r: 0.96, g: 0.86, b: 0.86, a: 0.9),
         highlightColor: SkeletonRGBA(r: 1.0,  g: 0.95, b: 0.95, a: 0.95),
         duration: 1.0, bandWidth: 0.5, cornerRadius: 5, direction: .topLeftToBottomRight)
 
+    /// The loaded content rendered beneath the controlled skeletons.
     private let sample = DemoProfile.samples[2]
 
+    /// The scrollable SwiftUI lab and its environment-scoped appearance.
     var body: some View {
         NavigationView {
             ScrollView {
@@ -44,14 +50,16 @@ struct SwiftUIDemoView: View {
             }
             .navigationTitle("SwiftUI")
         }
-        .skeletonAppearance(config)   // 面板配置注入整棵受控子树
+        .skeletonAppearance(config)   // Inject the panel configuration into the controlled subtree.
     }
 
-    // MARK: - 控制面板
+    // MARK: - Control Panel
 
+    /// The controls that update every public configuration value in real time.
     private var controlPanel: some View {
         VStack(alignment: .leading, spacing: 12) {
             Toggle("Loading", isOn: $isLoading)
+                .accessibilityIdentifier("example.swiftui.loading")
 
             Picker("方向", selection: $direction) {
                 ForEach(ShimmerDirection.allCases, id: \.self) { d in
@@ -76,6 +84,14 @@ struct SwiftUIDemoView: View {
         .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemBackground)))
     }
 
+    /// Creates a labeled slider with a formatted live value.
+    ///
+    /// - Parameters:
+    ///   - title: The short localized field title.
+    ///   - value: The bound configuration value.
+    ///   - range: The allowed closed value range.
+    ///   - suffix: The unit suffix displayed after the formatted value.
+    /// - Returns: A horizontal control row.
     private func slider(title: String, value: Binding<Double>,
                         range: ClosedRange<Double>, suffix: String) -> some View {
         HStack {
@@ -87,9 +103,9 @@ struct SwiftUIDemoView: View {
         }
     }
 
-    // MARK: - 示例
+    // MARK: - Examples
 
-    /// 形状示例块：随面板「形状」切换 circle / capsule / roundedRect。
+    /// A block that switches among circle, capsule, and rounded-rectangle clipping.
     private var shapeExample: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("形状").font(.headline)
@@ -101,7 +117,7 @@ struct SwiftUIDemoView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// 中央加载 logo：用 SF Symbol 的 alpha 作骨架剪影，与面板同相位。
+    /// A centered SF Symbol whose alpha creates an image-masked skeleton.
     private var logoExample: some View {
         VStack(spacing: 8) {
             Text("加载 logo（图片蒙版）").font(.headline)
@@ -114,7 +130,7 @@ struct SwiftUIDemoView: View {
         .frame(maxWidth: .infinity)
     }
 
-    /// 资料卡：圆头像 + 单行 name/price + 多行 bio（textStyle 自动算行数）。
+    /// A profile card combining a circle, single-line labels, and multiline text bars.
     private var profileCard: some View {
         HStack(alignment: .top, spacing: 12) {
             Circle().fill(Color.gray.opacity(0.2)).frame(width: 56, height: 56)
@@ -133,7 +149,7 @@ struct SwiftUIDemoView: View {
         .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemBackground)))
     }
 
-    /// 局部覆盖卡：内部子树注入固定 `overrideConfig`，演示「子树覆盖全局/面板外观」。
+    /// A card whose nested appearance remains independent of control-panel changes.
     private var overrideCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("局部覆盖（不随面板变）").font(.headline)
@@ -144,6 +160,6 @@ struct SwiftUIDemoView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemBackground)))
-        .skeletonAppearance(overrideConfig)   // 覆盖父级面板注入的 config
+        .skeletonAppearance(overrideConfig)   // Override the configuration inherited from the panel.
     }
 }

@@ -1,15 +1,26 @@
 import CoreGraphics
 
-/// 多行文本骨架的纯几何换算：由 footprint 高度与单行高度推出行数与单条高度。
-/// 与平台/字体无关 —— 单行高度由调用方（SwiftUI/UIKit 层）提供。
+/// Converts a text footprint and line height into platform-neutral skeleton bar geometry.
+///
+/// Framework integrations supply the resolved line height for their current font.
 public enum SkeletonLineMetrics {
-    /// footprint 高度按单行高度反推行数（四舍五入，至少 1 行）。
+    /// Estimates the number of text lines in a footprint, rounded to the nearest whole line.
+    ///
+    /// - Parameters:
+    ///   - height: The total text footprint height, in points.
+    ///   - lineHeight: The resolved height of one line, in points.
+    /// - Returns: At least one line. Invalid or nonpositive inputs also return `1`.
     public static func lineCount(height: CGFloat, lineHeight: CGFloat) -> Int {
         guard lineHeight > 0, height > 0 else { return 1 }
         return max(1, Int((height / lineHeight).rounded()))
     }
 
-    /// 单条骨架高度 ≈ 字形主体（行高的 ratio 倍）；上下留白即行距。
+    /// Calculates the visible bar height within one line box.
+    ///
+    /// - Parameters:
+    ///   - lineHeight: The resolved height of one line, in points.
+    ///   - ratio: The portion of the line height occupied by the bar. The default is `0.7`.
+    /// - Returns: A nonnegative bar height in points.
     public static func barHeight(lineHeight: CGFloat, ratio: CGFloat = 0.7) -> CGFloat {
         max(0, lineHeight * ratio)
     }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		201DB981D6D9A6074EBA61FD /* ISkeletonDemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94030DD6B99FB0E571BF3BF4 /* ISkeletonDemoUITests.swift */; };
 		53B50126CDA234626901CAB4 /* ISkeletonDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 606A76EB44040D105A4D4AC4 /* ISkeletonDemoApp.swift */; };
 		749E97F6E248120442487D7C /* Skeleton-UIKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7B04E271ABABCA6518D61A99 /* Skeleton-UIKit */; };
 		805D96D4F4E0EF9305B2917E /* Skeleton-SwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 37CCC6E82B72B17C0B750416 /* Skeleton-SwiftUI */; };
@@ -16,13 +17,25 @@
 		E91F88C8383157DED3E50FFD /* DemoStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B551E98FE75D2B1832712EB /* DemoStyles.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		27B4F681793BBD3A343AB879 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4C4DBB254ED7EA19F304964D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C62EB2E07D162C126B11FCA6;
+			remoteInfo = ISkeletonDemo;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		006BD4FC191B3C2C9F62E129 /* ISkeleton */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ISkeleton; path = ..; sourceTree = SOURCE_ROOT; };
 		1B551E98FE75D2B1832712EB /* DemoStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoStyles.swift; sourceTree = "<group>"; };
 		606A76EB44040D105A4D4AC4 /* ISkeletonDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISkeletonDemoApp.swift; sourceTree = "<group>"; };
 		8945EF2D8D03DFA43832B177 /* ISkeletonDemo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ISkeletonDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		94030DD6B99FB0E571BF3BF4 /* ISkeletonDemoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISkeletonDemoUITests.swift; sourceTree = "<group>"; };
 		9F2453B4F6E2D573420B235F /* UIKitDemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitDemoViewController.swift; sourceTree = "<group>"; };
 		B6F91242FD4CB057EC95941A /* SwiftUIDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIDemoView.swift; sourceTree = "<group>"; };
+		D4EC9B1F3A87D5C98A701B5F /* ISkeletonDemoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ISkeletonDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA45E1160528288E5A8DA5A2 /* DemoProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoProfile.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -43,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				1FFA8DBEB57617F502789416 /* ISkeletonDemo */,
+				8F130FD613DE2C0D6075FFD5 /* ISkeletonDemoUITests */,
 				E418B78E154A8371F385AF27 /* Packages */,
 				6622647F101C7D35905EAA6D /* Products */,
 			);
@@ -64,8 +78,17 @@
 			isa = PBXGroup;
 			children = (
 				8945EF2D8D03DFA43832B177 /* ISkeletonDemo.app */,
+				D4EC9B1F3A87D5C98A701B5F /* ISkeletonDemoUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8F130FD613DE2C0D6075FFD5 /* ISkeletonDemoUITests */ = {
+			isa = PBXGroup;
+			children = (
+				94030DD6B99FB0E571BF3BF4 /* ISkeletonDemoUITests.swift */,
+			);
+			path = ISkeletonDemoUITests;
 			sourceTree = "<group>";
 		};
 		E418B78E154A8371F385AF27 /* Packages */ = {
@@ -79,6 +102,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		6FAD94812C861E871200F149 /* ISkeletonDemoUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 64BD6E8EDA6DBDC2D526762C /* Build configuration list for PBXNativeTarget "ISkeletonDemoUITests" */;
+			buildPhases = (
+				23E2990393B95731D4952247 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E3FF74EF0E8B6CED866F3AA2 /* PBXTargetDependency */,
+			);
+			name = ISkeletonDemoUITests;
+			packageProductDependencies = (
+			);
+			productName = ISkeletonDemoUITests;
+			productReference = D4EC9B1F3A87D5C98A701B5F /* ISkeletonDemoUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		C62EB2E07D162C126B11FCA6 /* ISkeletonDemo */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = EC649A5E6D94ECCE2FF4AF7D /* Build configuration list for PBXNativeTarget "ISkeletonDemo" */;
@@ -108,6 +149,9 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					6FAD94812C861E871200F149 = {
+						TestTargetID = C62EB2E07D162C126B11FCA6;
+					};
 				};
 			};
 			buildConfigurationList = 02EBA8AA01D68794D9F62F24 /* Build configuration list for PBXProject "ISkeletonDemo" */;
@@ -128,11 +172,20 @@
 			projectRoot = "";
 			targets = (
 				C62EB2E07D162C126B11FCA6 /* ISkeletonDemo */,
+				6FAD94812C861E871200F149 /* ISkeletonDemoUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		23E2990393B95731D4952247 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				201DB981D6D9A6074EBA61FD /* ISkeletonDemoUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B3375867D0972BB4205AEEDE /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -146,6 +199,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E3FF74EF0E8B6CED866F3AA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C62EB2E07D162C126B11FCA6 /* ISkeletonDemo */;
+			targetProxy = 27B4F681793BBD3A343AB879 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		149CEFAB1F94329F2128F548 /* Release */ = {
@@ -187,6 +248,24 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
+		};
+		4EDC05CA8D4519451B6A0774 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibabyblue.ISkeletonDemoUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.10;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ISkeletonDemo;
+			};
+			name = Release;
 		};
 		5D6BFF1DFE1178CE3AA0DEF0 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -243,6 +322,24 @@
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
+		};
+		82BA41FFA83400E521113C42 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibabyblue.ISkeletonDemoUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.10;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ISkeletonDemo;
+			};
+			name = Debug;
 		};
 		A6D9B051E1E7CBC07A8305F6 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -315,6 +412,15 @@
 			buildConfigurations = (
 				A6D9B051E1E7CBC07A8305F6 /* Debug */,
 				5D6BFF1DFE1178CE3AA0DEF0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		64BD6E8EDA6DBDC2D526762C /* Build configuration list for PBXNativeTarget "ISkeletonDemoUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				82BA41FFA83400E521113C42 /* Debug */,
+				4EDC05CA8D4519451B6A0774 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

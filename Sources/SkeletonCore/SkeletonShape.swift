@@ -1,12 +1,22 @@
 import CoreGraphics
 
-/// 占位形状。circle/capsule 由 size 推出圆角；roundedRect 用指定或默认圆角。
+/// A geometric shape used to clip a skeleton placeholder.
 public enum SkeletonShape: Equatable, Sendable {
-    case roundedRect(cornerRadius: CGFloat?)   // nil → 用 config.cornerRadius
+    /// A rounded rectangle with an optional explicit radius.
+    ///
+    /// A `nil` radius uses the active configuration's default corner radius.
+    case roundedRect(cornerRadius: CGFloat?)
+    /// A circular placeholder whose radius is half the shorter dimension.
     case circle
+    /// A capsule placeholder whose radius is half the shorter dimension.
     case capsule
 
-    /// 实际圆角：circle/capsule = min(w,h)/2；roundedRect(nil) = default；roundedRect(cr) = cr。
+    /// Resolves the effective corner radius for a concrete placeholder size.
+    ///
+    /// - Parameters:
+    ///   - size: The placeholder's width and height, in points.
+    ///   - defaultRadius: The fallback radius for a rounded rectangle with no explicit value.
+    /// - Returns: The explicit or fallback rounded-rectangle radius, or half the shorter dimension for circles and capsules.
     public func cornerRadius(for size: CGSize, default defaultRadius: CGFloat) -> CGFloat {
         switch self {
         case .roundedRect(let cr): return cr ?? defaultRadius

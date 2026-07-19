@@ -3,7 +3,7 @@ import UIKit
 
 /// Uses TextKit to calculate the content-driven line fragments of a UIKit label.
 enum SkeletonLineLayout {
-    /// Lays out attributed text and returns the used rectangle for each visible line.
+    /// Lays out attributed text at the available width and returns each content-driven line rectangle.
     ///
     /// Truncating modes normalize to word wrapping for unlimited-line labels because
     /// applying a truncating mode directly would collapse TextKit output to one line.

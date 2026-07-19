@@ -120,7 +120,7 @@ Geometric and image-mask activation are separate rendering modes. Deactivate a U
 
 ## Important Sizing Contract
 
-ISkeleton cannot infer future layout from absent data. Use representative strings for data-driven text, placeholder rows for unloaded collections, and explicit frames for fixed-size media. A view with a zero footprint produces a zero-size skeleton.
+ISkeleton cannot infer future layout from absent data. Use representative strings for data-driven text, placeholder rows for unloaded collections, and explicit frames for fixed-size media. A view with a zero footprint produces a zero-size skeleton. Before activating a multiline UIKit label, resolve its final width; its current text, width, and `numberOfLines` determine the generated bars, and every bar participates in the shared shimmer without changing the label's layout footprint.
 
 ## Documentation
 

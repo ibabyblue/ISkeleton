@@ -23,9 +23,9 @@ bioLabel.skeleton(true)
 
 ## Mirror TextKit line fragments
 
-SkeletonUIKit creates an attributed value from plain label text and its current font, normalizes paragraph wrapping, and lays it out through TextKit at the label width. `numberOfLines == 0` means unlimited lines.
+SkeletonUIKit creates an attributed value from plain label text and its current font, normalizes paragraph wrapping, and lays it out through TextKit at the label's current width. `numberOfLines == 0` returns every line required by the text instead of limiting fragments to the label's current height.
 
-Each used line rectangle becomes one bar. The visible bar occupies 62 percent of the line fragment height and is vertically centered, leaving a gap between lines. Width follows the actual used line width, including a naturally shorter final line.
+Each used line rectangle becomes one bar. The visible bar occupies 62 percent of the line fragment height and is vertically centered, leaving a gap between lines. Width follows the actual used line width, including a naturally shorter final line. The shared gradient and its mask expand to the union of the overlay bounds and every generated bar, so all content-derived bars receive shimmer. This drawing does not change the label's Auto Layout footprint.
 
 If text is empty, width is nonpositive, or TextKit produces no line fragments, the overlay falls back to one bounds-filling geometric bar.
 

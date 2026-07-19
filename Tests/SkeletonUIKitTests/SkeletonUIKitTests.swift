@@ -47,6 +47,16 @@ final class SkeletonLineLayoutTests: XCTestCase {
         XCTAssertTrue(lines.isEmpty)
     }
 
+    func test_longBiography_returnsAllContentDrivenFragments() {
+        let lines = SkeletonLineLayout.lineRects(
+            for: attr("猫奴一枚，家里两只布偶。日常写代码、做手工、研究咖啡豆的烘焙曲线，生活节奏慢但很充实。", 13),
+            width: 278,
+            numberOfLines: 0,
+            lineBreakMode: .byTruncatingTail)
+
+        XCTAssertEqual(lines.count, 3)
+    }
+
     func test_rgbaToUIColor_roundTripsComponents() {
         let ui = SkeletonRGBA(r: 0.2, g: 0.4, b: 0.6, a: 0.8).uiColor
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
@@ -120,6 +130,15 @@ final class SkeletonOverlayBehaviorTests: XCTestCase {
     }
 
     @MainActor
+    private func biographyLabel(height: CGFloat) -> UILabel {
+        let label = UILabel(frame: CGRect(x: 0, y: 0, width: 278, height: height))
+        label.font = .systemFont(ofSize: 13)
+        label.numberOfLines = 0
+        label.text = "猫奴一枚，家里两只布偶。日常写代码、做手工、研究咖啡豆的烘焙曲线，生活节奏慢但很充实。"
+        return label
+    }
+
+    @MainActor
     func test_skeletonAfterExternalRemoval_reattachesWithoutCrash() {
         let label = UILabel()
         label.text = "￥00.00"
@@ -153,6 +172,40 @@ final class SkeletonOverlayBehaviorTests: XCTestCase {
         let overlay = firstOverlay(label)
         overlay?.layoutIfNeeded()
         XCTAssertGreaterThan(overlay?.builtBarCountForTesting ?? 0, 1)
+    }
+
+    @MainActor
+    func test_shortMultilineLabel_keepsEveryContentDrivenBar() {
+        let label = biographyLabel(height: 20)
+        label.skeleton(true)
+        let overlay = firstOverlay(label)
+        overlay?.layoutIfNeeded()
+
+        XCTAssertEqual(overlay?.builtBarCountForTesting, 3)
+    }
+
+    @MainActor
+    func test_shimmerRenderingFrame_coversEveryContentDrivenBar() {
+        let label = biographyLabel(height: 20)
+        label.skeleton(true)
+        let overlay = firstOverlay(label)
+        overlay?.layoutIfNeeded()
+
+        let shimmerFrame = overlay?.shimmerRenderingFrameForTesting ?? .null
+        XCTAssertTrue((overlay?.builtBarFramesForTesting ?? []).allSatisfy(shimmerFrame.contains))
+    }
+
+    @MainActor
+    func test_shimmerMaskBars_matchEveryBaseBar() {
+        let label = biographyLabel(height: 20)
+        label.skeleton(true)
+        let overlay = firstOverlay(label)
+        overlay?.layoutIfNeeded()
+
+        XCTAssertEqual(
+            overlay?.shimmerMaskBarFramesForTesting,
+            overlay?.builtBarFramesForTesting
+        )
     }
 
     @MainActor

@@ -4,6 +4,12 @@ All notable changes to ISkeleton are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses semantic versioning.
 
+## [0.4.1] - 2026-07-19
+
+### Fixed
+
+- Extended UIKit multiline shimmer and mask geometry across every content-derived bar, keeping short final lines animated even beyond the overlay's initial bounds.
+
 ## [0.4.0] - 2026-07-19
 
 ### Added
@@ -57,6 +63,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Added UIKit label-line layout and the shared display-link clock.
 - Added the initial SwiftUI and UIKit demo application.
 
+[0.4.1]: https://github.com/ibabyblue/ISkeleton/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/ibabyblue/ISkeleton/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/ibabyblue/ISkeleton/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/ibabyblue/ISkeleton/compare/0.1.0...0.2.0

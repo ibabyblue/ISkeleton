@@ -2,7 +2,7 @@
 import UIKit
 import SkeletonCore
 
-/// Displays skeleton bars or an image-masked shimmer without affecting host layout.
+/// Displays content-driven skeleton bars or an image-masked shimmer without affecting host layout.
 final class SkeletonOverlayView: UIView, ShimmerDriven {
 
     /// The frame and corner radius of one placeholder bar.
@@ -75,6 +75,17 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
     var builtBarFramesForTesting: [CGRect] { (barsLayer.sublayers ?? []).map { $0.frame } }
     /// The corner radii of currently built base bars, exposed for tests.
     var builtBarRadiiForTesting: [CGFloat] { (barsLayer.sublayers ?? []).map { $0.cornerRadius } }
+    /// The current gradient frame in overlay coordinates, exposed for tests.
+    var shimmerRenderingFrameForTesting: CGRect { shimmerLayer.frame }
+    /// The current shimmer-mask bar frames converted to overlay coordinates, exposed for tests.
+    var shimmerMaskBarFramesForTesting: [CGRect] {
+        (shimmerLayer.mask?.sublayers ?? []).map { maskBar in
+            maskBar.frame.offsetBy(
+                dx: shimmerLayer.frame.minX,
+                dy: shimmerLayer.frame.minY
+            )
+        }
+    }
     /// Whether an image mask currently clips the overlay, exposed for tests.
     var isImageMaskedForTesting: Bool { layer.mask != nil }
 
@@ -86,7 +97,7 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         rebuildBars()
     }
 
-    /// Recreates geometric bars or delegates to image-mask layer construction.
+    /// Recreates geometric bars across their shared rendering extent or delegates to image-mask construction.
     private func rebuildBars() {
         if let maskImage {
             rebuildImageMasked(maskImage)
@@ -98,9 +109,13 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
         barsLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
 
         let base = configuration.baseColor.uiColor.cgColor
+        let bars = barSpecs()
+        let renderingFrame = bars.reduce(bounds) { frame, bar in
+            frame.union(bar.rect)
+        }
         let maskContainer = CALayer()
-        maskContainer.frame = bounds
-        for bar in barSpecs() {
+        maskContainer.frame = CGRect(origin: .zero, size: renderingFrame.size)
+        for bar in bars {
             let layerBar = CALayer()
             layerBar.frame = bar.rect
             layerBar.backgroundColor = base
@@ -108,12 +123,15 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
             barsLayer.addSublayer(layerBar)
 
             let maskBar = CALayer()
-            maskBar.frame = bar.rect
+            maskBar.frame = bar.rect.offsetBy(
+                dx: -renderingFrame.minX,
+                dy: -renderingFrame.minY
+            )
             maskBar.backgroundColor = UIColor.white.cgColor
             maskBar.cornerRadius = bar.radius
             maskContainer.addSublayer(maskBar)
         }
-        shimmerLayer.frame = bounds
+        shimmerLayer.frame = renderingFrame
         shimmerLayer.mask = maskContainer
         CATransaction.commit()
     }
@@ -145,8 +163,9 @@ final class SkeletonOverlayView: UIView, ShimmerDriven {
 
     /// Calculates text-driven label bars or one bounds-filling geometric bar.
     ///
-    /// Label bars are vertically centered within each line fragment and reduced by
-    /// `lineFillRatio`. Empty or unavailable label layout falls back to one shape bar.
+    /// Label bars are vertically centered within each content-driven line fragment
+    /// and reduced by `lineFillRatio`. Empty or unavailable label layout falls back
+    /// to one shape bar.
     ///
     /// - Returns: The bar geometry used to build fill and shimmer-mask layers.
     private func barSpecs() -> [Bar] {
